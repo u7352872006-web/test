@@ -10,21 +10,31 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const res = await fetch(DATA_URL);
-    data = await res.json();
+    const jsonData = await res.json();
 
     // 引退を除外
-    data = data.filter(item => item.rank !== "引退");
+    data = jsonData.filter(item => item.rank !== "引退");
 
     // ランク順にソート
     data.sort((a, b) => RANK_ORDER.indexOf(a.rank) - RANK_ORDER.indexOf(b.rank));
 
-    // プルダウン生成
+  } catch(e) {
+    console.error("データ取得エラー:", e);
+    select.innerHTML = "<option>データ取得に失敗しました</option>";
+    return;
+  }
+
+  // プルダウン生成
+  function renderOptions() {
     select.innerHTML = "";
+
+    // 初期値
     const defaultOpt = document.createElement("option");
     defaultOpt.value = "";
     defaultOpt.textContent = "選択してください";
     select.appendChild(defaultOpt);
 
+    // 名前 + ランク
     data.forEach(item => {
       const opt = document.createElement("option");
       opt.value = item.name;
@@ -32,10 +42,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       select.appendChild(opt);
     });
 
-  } catch(e) {
-    console.error("データ取得エラー:", e);
-    select.innerHTML = "<option>データ取得に失敗しました</option>";
+    zoomInput.value = "";
   }
+
+  renderOptions();
 
   // 選択時にZoomリンク反映
   select.addEventListener("change", () => {
