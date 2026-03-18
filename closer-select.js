@@ -1,65 +1,58 @@
 /**
- * セールスマンのプルダウンを生成するコンポーネント
- * @param {string} targetId - 挿入先のHTML要素ID
+ * @param {string} targetId - プルダウン挿入先のID
+ * @param {string} inputId - URLを表示するinput要素のID
  */
-export async function initCloserSelect(targetId) {
+export async function initCloserSelect(targetId, inputId) {
     const API_URL = "https://script.google.com/macros/s/AKfycbxb282oIXg6UrpqJ1MM2txXEriwJnq8nHiUFqZTpyoI8FJ4zOHFjrQKvqnDhteA9qTl/exec";
     const container = document.getElementById(targetId);
+    const urlInput = document.getElementById(inputId);
 
-    // 表示優先順位の定義
-    const rankPriority = ["トップセールス", "2軍", "3軍", "研修生", "審査落ち"];
-
-    if (!container) return;
+    const rankOrder = ["トップセールス", "2軍", "3軍", "研修生", "審査落ち"];
+    
+    // ランク別の背景色定義
+    const colors = {
+        "トップセールス": "#ffeb3b", // 黄
+        "2軍": "#c8e6c9",           // 薄緑
+        "3軍": "#e3f2fd",           // 薄青
+        "研修生": "#f5f5f5",         // 薄灰
+        "審査落ち": "#ffcdd2"        // 薄赤
+    };
 
     try {
         const response = await fetch(API_URL);
-        const rawData = await response.json();
+        const data = await response.json();
 
-        // 1. 「引退」を除外
-        const filtered = rawData.filter(item => item.rank !== "引退");
+        const filtered = data
+            .filter(item => item.rank !== "引退" && rankOrder.includes(item.rank))
+            .sort((a, b) => rankOrder.indexOf(a.rank) - rankOrder.indexOf(b.rank));
 
-        // 2. 指定のランク順にソート
-        filtered.sort((a, b) => {
-            const indexA = rankPriority.indexOf(a.rank);
-            const indexB = rankPriority.indexOf(b.rank);
-            
-            // 優先順位リストにないランクは最後に回す
-            const valA = indexA === -1 ? 99 : indexA;
-            const valB = indexB === -1 ? 99 : indexB;
-            
-            return valA - valB;
-        });
-
-        // 3. プルダウンの組み立て
         const select = document.createElement('select');
-        
-        const placeholder = document.createElement('option');
-        placeholder.textContent = "担当者を選択してください";
-        placeholder.value = "";
-        select.appendChild(placeholder);
+        select.innerHTML = '<option value="">選択してください</option>';
 
-        filtered.forEach(person => {
+        filtered.forEach(item => {
             const option = document.createElement('option');
-            // 表示名：名前（ランク）
-            option.textContent = `${person.name}（${person.rank}）`;
-            // 値：Zoomリンク
-            option.value = person.zoom;
+            option.textContent = `${item.name}（${item.rank}）`;
+            option.value = item.zoom;
+            // ランクに応じた背景色をオプションに設定
+            option.style.backgroundColor = colors[item.rank] || "#white";
             select.appendChild(option);
         });
 
-        // 画面に反映
-        container.innerHTML = '';
-        container.appendChild(select);
-
-        // (オプション) 選択時の挙動
+        // 選択変更時の処理：背景色を同期させ、inputにURLを表示
         select.addEventListener('change', (e) => {
-            if (e.target.value) {
-                console.log("Selected Zoom URL:", e.target.value);
-            }
+            const selectedUrl = e.target.value;
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            
+            // inputにZoomリンクを表示
+            urlInput.value = selectedUrl;
+            
+            // select自体の背景色も選択されたランクの色に変更
+            select.style.backgroundColor = selectedOption.style.backgroundColor;
         });
 
+        container.appendChild(select);
+
     } catch (err) {
-        container.innerHTML = '<p style="color:red; font-size:12px;">データの読み込みに失敗しました。</p>';
-        console.error("Fetch error:", err);
+        console.error("Error:", err);
     }
 }
