@@ -1,63 +1,99 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>当日メッセージ送付</title>
-</head>
-<body>
-
-<h3>当日メッセージ送付☀️</h3>
-
-<label>
-    担当者：
-    <span id="closer-list">読み込み中...</span>
-</label>
-<br><br>
-
-<input type="hidden" id="zoom-url">
-
-<textarea id="output" rows="15" cols="30" readonly></textarea>
-<br>
-
-<button id="copyBtn">コピー</button>
-
 <script type="module">
     import { initCloserSelect } from './closer-select.js';
+    import { initEntrySelect } from './entry-select.js';
 
-    const zoomUrlInput = document.getElementById("zoom-url");
+    const lineNameInput = document.getElementById("lineName");
+    const meetingDateInput = document.getElementById("meetingDate");
+    const calendarTitleInput = document.getElementById("calendarTitle");
     const output = document.getElementById("output");
-    const copyBtn = document.getElementById("copyBtn");
+    const extraQuestion = document.getElementById("extraQuestion");
+    const closerLabel = document.getElementById("selected-closer-label");
 
-    // メッセージ生成ロジック
-    function generateText() {
-        const url = zoomUrlInput.value; 
+    // 全初期化（LINE名以外）
+    function resetAllExceptLineName() {
+        meetingDateInput.value = "";
+        calendarTitleInput.value = "";
+        output.value = "";
+        extraQuestion.value = "";
+        closerLabel.textContent = "「（クローザー）担当者名」";
         
-        const selectEl = document.querySelector('#closer-list select');
-        
-        // 担当者が未選択の場合は空にする
-        if (!selectEl || !selectEl.value) {
-            output.value = "";
-            return;
+        // 担当者プルダウンのリセット
+        const staffSelect = document.querySelector('#closer-list select');
+        if (staffSelect) {
+            staffSelect.selectedIndex = 0;
+            staffSelect.style.backgroundColor = "#ffffff";
         }
-
-        output.value = `おはようございます☀️
-
-本日のZoomはこちらです！
-時間になったら入室してください😊
-
-${url}`;
+        
+        // 流入経路プルダウンのリセット
+        const entrySelect = document.querySelector('#entry-container select');
+        if (entrySelect) {
+            entrySelect.selectedIndex = 0;
+        }
     }
 
-    // 初期化（担当者プルダウンが変更されたらgenerateTextを実行）
-    initCloserSelect('closer-list', 'zoom-url', generateText);
+    // カレンダータイトル・メッセージ更新
+    function updateAllOutputs() {
+        const lineName = lineNameInput.value.trim();
+        const meetingDate = meetingDateInput.value.trim();
+        
+        // 流入経路の取得
+        const entrySelect = document.querySelector('#entry-container select');
+        const mediaValue = entrySelect ? entrySelect.value : "";
+        const entrySelected = entrySelect && entrySelect.selectedIndex > 0;
+        
+        // 担当者情報の取得
+        const staffSelect = document.querySelector('#closer-list select');
+        const zoomUrl = staffSelect ? staffSelect.value : "";
+        const staffOption = staffSelect ? staffSelect.options[staffSelect.selectedIndex] : null;
+        const staffName = (staffOption && staffOption.value) ? staffOption.text.split('（')[0] : "";
 
-    // コピー機能
-    copyBtn.addEventListener("click", () => {
-        if (!output.value.trim()) return;
-        output.select();
-        document.execCommand("copy");
+        // 1. カレンダータイトル更新（名前と経路が揃った時のみ）
+        calendarTitleInput.value = (lineName && entrySelected) ? `${mediaValue}${lineName}` : "";
+
+        // 2. ラベル表示更新
+        closerLabel.textContent = staffName ? `「（クローザー）${staffName}」` : "「（クローザー）担当者名」";
+
+        // 3. Zoomメッセージ更新
+        if (lineName && meetingDate && zoomUrl) {
+            output.value = `実施日：${meetingDate}\n\n${zoomUrl}\n\n【無料プレゼントはこちら👇】\nhttps://forms.gle/i2XPWLVQE44iYc7b8`;
+        } else {
+            output.value = "";
+        }
+
+        // 4. 雑談質問
+        extraQuestion.value = lineName ? `${lineName}さんはこれまで副業やったことありますか？` : "";
+    }
+
+    // 初期化実行
+    initCloserSelect('closer-list', 'unused-id', updateAllOutputs);
+    initEntrySelect('entry-container', updateAllOutputs);
+
+    // イベント監視
+    lineNameInput.addEventListener("input", () => {
+        resetAllExceptLineName();
+        updateAllOutputs();
     });
-</script>
 
-</body>
-</html>
+    meetingDateInput.addEventListener("input", updateAllOutputs);
+
+    // クリアボタン
+    document.getElementById("clearBtn").addEventListener("click", () => {
+        lineNameInput.value = "";
+        resetAllExceptLineName();
+        updateAllOutputs();
+    });
+
+    // コピー機能（省略せずに実装）
+    const setupCopy = (btnId, targetEl) => {
+        document.getElementById(btnId).onclick = () => {
+            if (!targetEl.value) return;
+            targetEl.select();
+            document.execCommand("copy");
+        };
+    };
+    setupCopy("lineNameCopyBtn", lineNameInput);
+    setupCopy("calendarCopyBtn", calendarTitleInput);
+    setupCopy("copyBtn", output);
+    setupCopy("extraCopyBtn", extraQuestion);
+
+</script>
