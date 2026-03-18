@@ -1,63 +1,84 @@
-// Apps ScriptのJSONデータURL
-const DATA_URL = "https://script.google.com/macros/s/AKfycbxb282oIXg6UrpqJ1MM2txXEriwJnq8nHiUFqZTpyoI8FJ4zOHFjrQKvqnDhteA9qTl/exec";
-
-// ランクの順序
-const RANK_ORDER = ["トップセールス", "2軍", "3軍", "研修生", "審査落ち"];
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const zoomInput = document.getElementById("zoom");
-  const showBtn = document.getElementById("showModal");
-  const modal = document.getElementById("modal");
-  const modalContent = document.getElementById("modalContent");
-  const closeBtn = document.getElementById("closeModal");
-
-  // データ取得
-  let data = [];
-  try {
-    const res = await fetch(DATA_URL);
-    data = await res.json();
-  } catch(e) {
-    modalContent.innerText = "データ取得に失敗しました";
-    console.error(e);
+class ClosersModule extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.data = [];
+    this.rankOrder = ["1軍", "2軍", "3軍", "研修生", "審査落ち"];
+    this.rankColors = {
+      "1軍": "#d1e7dd",
+      "2軍": "#cff4fc",
+      "3軍": "#fff3cd",
+      "研修生": "#f8d7da",
+      "審査落ち": "#e2e3e5"
+    };
   }
 
-  // ボタン押下でモーダル表示
-  showBtn.addEventListener("click", () => {
-    modal.style.display = "flex";
-    renderModal(data);
-  });
+  connectedCallback() {
+    this.url = this.getAttribute("url");
+    this.renderBase();
+    this.loadData();
+  }
 
-  // モーダル閉じる
-  closeBtn.addEventListener("click", () => modal.style.display = "none");
+  renderBase() {
+    this.shadowRoot.innerHTML = `
+      <input id="search" type="text" placeholder="名前検索" style="width:100%; margin-bottom:4px; padding:6px;">
+      <select id="select" style="width:100%; padding:6px;"></select>
+      <style>
+        option { padding:4px; }
+      </style>
+    `;
 
-  // モーダルレンダリング
-  function renderModal(data) {
-    modalContent.innerHTML = "";
+    this.shadowRoot.querySelector("#search")
+      .addEventListener("input", e => this.renderOptions(e.target.value));
+    
+    this.shadowRoot.querySelector("#select")
+      .addEventListener("change", e => {
+        const selected = this.data.find(d => d.name === e.target.value);
+        if (selected) {
+          document.getElementById("zoom").value = selected.zoom;
+        }
+      });
+  }
 
-    RANK_ORDER.forEach(rank => {
-      const rankDiv = document.createElement("div");
-      const rankTitle = document.createElement("h4");
-      rankTitle.textContent = rank;
-      rankDiv.appendChild(rankTitle);
+  async loadData() {
+    try {
+      const res = await fetch(this.url);
+      const jsonData = await res.json();
+      // 「引退」を除外
+      this.data = jsonData.filter(item => item.rank !== "引退");
+      this.renderOptions("");
+    } catch(e) {
+      console.error("データ取得エラー:", e);
+    }
+  }
 
-      const rankButtons = document.createElement("div");
-      rankButtons.style.display = "flex";
-      rankButtons.style.flexWrap = "wrap";
-      rankButtons.style.gap = "6px";
+  renderOptions(keyword) {
+    const select = this.shadowRoot.querySelector("#select");
+    select.innerHTML = "";
 
-      data.filter(item => item.rank === rank)
-          .forEach(item => {
-            const btn = document.createElement("button");
-            btn.textContent = item.name;
-            btn.onclick = () => {
-              zoomInput.value = item.zoom;
-              modal.style.display = "none";
-            };
-            rankButtons.appendChild(btn);
-          });
+    this.rankOrder.forEach(rank => {
+      const items = this.data.filter(item => item.rank === rank &&
+        item.name.toLowerCase().includes(keyword.toLowerCase())
+      );
 
-      rankDiv.appendChild(rankButtons);
-      modalContent.appendChild(rankDiv);
+      items.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item.name;
+        option.textContent = `${item.name} (${item.rank})`;
+        option.style.backgroundColor = this.rankColors[rank] || "#fff";
+        select.appendChild(option);
+      });
     });
+
+    // 選択肢があれば最初のZoomリンクを反映
+    const first = select.options[0];
+    if (first) {
+      select.value = first.value;
+      document.getElementById("zoom").value = this.data.find(d => d.name === first.value)?.zoom || "";
+    } else {
+      document.getElementById("zoom").value = "";
+    }
   }
-});
+}
+
+customElements.define("closer-select", ClosersModule);
