@@ -2,20 +2,16 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>クローザー選択</title>
+  <title>一覧</title>
 </head>
 <body>
-  <h2>クローザー選択</h2>
 
-  <!-- Zoomリンク表示用 -->
-  <label>Zoomリンク:</label>
-  <input id="zoom" type="text" readonly style="width:100%; margin-bottom:8px; padding:6px;">
+<input type="text" id="search" placeholder="検索">
+<br>
+<select id="closerSelect"></select>
+<br>
+<input type="text" id="zoom" readonly>
 
-  <!-- プルダウン -->
-  <label>クローザーを選択:</label>
-  <select id="closerSelect" style="width:100%; padding:6px;"></select>
-
-  <!-- JS -->
-  <script type="module" src="closer-select.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
