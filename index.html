@@ -2,31 +2,11 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>前日メッセージ送付</title>
+    <title>当日メッセージ送付</title>
 </head>
 <body>
 
-<h3>前日メッセージ送付🌙</h3>
-
-<label>
-    面談時間：
-    <select id="meetingTime">
-        <option value="">選択してください</option>
-        <option value="10:00">10:00</option>
-        <option value="11:30">11:30</option>
-        <option value="13:00">13:00</option>
-        <option value="14:30">14:30</option>
-        <option value="16:00">16:00</option>
-        <option value="17:30">17:30</option>
-        <option value="18:30">18:30</option>
-        <option value="19:00">19:00</option>
-        <option value="20:30">20:30</option>
-        <option value="21:00">21:00</option>
-        <option value="21:30">21:30</option>
-        <option value="22:00">22:00</option>
-    </select>
-</label>
-<br><br>
+<h3>当日メッセージ送付☀️</h3>
 
 <label>
     担当者：
@@ -36,7 +16,7 @@
 
 <input type="hidden" id="zoom-url">
 
-<textarea id="output" rows="15" cols="30"></textarea>
+<textarea id="output" rows="15" cols="30" readonly></textarea>
 <br>
 
 <button id="copyBtn">コピー</button>
@@ -44,36 +24,36 @@
 <script type="module">
     import { initCloserSelect } from './closer-select.js';
 
-    const meetingTimeInput = document.getElementById("meetingTime");
     const zoomUrlInput = document.getElementById("zoom-url");
     const output = document.getElementById("output");
     const copyBtn = document.getElementById("copyBtn");
 
+    // メッセージ生成ロジック
     function generateText() {
-        const rawTime = meetingTimeInput.value; // "10:00" など
         const url = zoomUrlInput.value; 
         
         const selectEl = document.querySelector('#closer-list select');
-        if (!selectEl || !selectEl.value || !rawTime) {
+        
+        // 担当者が未選択の場合は空にする
+        if (!selectEl || !selectEl.value) {
             output.value = "";
             return;
         }
 
-        // 時間表記の変換ロジック
-        const timeDisplay = rawTime.replace(':00', '時').replace(':30', '時半');
+        output.value = `おはようございます☀️
 
-        output.value = `お疲れ様です！
-明日の${timeDisplay}からは予定通りよろしくお願いします😊
-
-時間になったらご参加ください。
+本日のZoomはこちらです！
+時間になったら入室してください😊
 
 ${url}`;
     }
 
+    // 初期化（担当者プルダウンが変更されたらgenerateTextを実行）
     initCloserSelect('closer-list', 'zoom-url', generateText);
-    meetingTimeInput.addEventListener("change", generateText);
 
+    // コピー機能
     copyBtn.addEventListener("click", () => {
+        if (!output.value.trim()) return;
         output.select();
         document.execCommand("copy");
     });
