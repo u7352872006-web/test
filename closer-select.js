@@ -1,4 +1,4 @@
-const DATA_URL = "https://script.google.com/macros/s/AKfycbxb282oIXg6UrpqJ1MM2txXEriwJnq8nHiUFqZTpyoI8FJ4zOHFjrQKvqnDhteA9qTl/exec"; // ←最新デプロイURLに置き換える
+const DATA_URL = "https://script.google.com/macros/s/YOUR_DEPLOYED_URL/exec"; // ←ブラウザで確認済みURLに置き換える
 
 const RANK_ORDER = ["トップセールス", "2軍", "3軍", "研修生", "審査落ち"];
 
@@ -12,14 +12,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const res = await fetch(DATA_URL);
     const json = await res.json();
 
-    // 🔹 ヘッダーあり形式前提（A=name, B=zoom, C=rank）
-    data = json
-      .filter(item => item.rank !== "引退")
-      .map(item => ({
-        name: item.name,
-        zoom: item.zoom,
-        rank: item.rank
-      }));
+    // 引退除外
+    data = json.filter(item => item.rank !== "引退");
 
   } catch (e) {
     select.innerHTML = "<option>取得失敗</option>";
@@ -30,13 +24,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ランク順にソート
   data.sort((a, b) => RANK_ORDER.indexOf(a.rank) - RANK_ORDER.indexOf(b.rank));
 
-  // プルダウン生成
+  // プルダウン初期値
   select.innerHTML = "";
   const defaultOpt = document.createElement("option");
   defaultOpt.value = "";
   defaultOpt.textContent = "選択してください";
   select.appendChild(defaultOpt);
 
+  // プルダウン生成（名前 + ランク）
   data.forEach(item => {
     const opt = document.createElement("option");
     opt.value = item.name;
