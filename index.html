@@ -1,50 +1,100 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>日程確定(アポ確定)</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; font-size: 12px; line-height: 1.6; }
-        textarea { width: 100%; display: block; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .bg-yellow { background-color: #fff9c4; } .bg-green { background-color: #e8f5e9; }
-        .title-blue { color: blue; font-weight: bold; font-size: 18px; display: block; }
-        .title-red { color: #B22222; font-weight: bold; font-size: 18px; display: block; }
-        .sub-text { color: gray; font-size: 11px; display: block; }
-        .highlight { font-weight: bold; background: #fff9c4; padding: 2px 4px; display: inline-block; margin: 4px 0; }
-        .remind { background: #e0f0ff; color: #004a99; font-weight: bold; padding: 6px 12px; border-radius: 4px; display: inline-block; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.2; } }
-        hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
-        li { list-style: none; margin-bottom: 15px; }
-    </style>
+<meta charset="UTF-8">
+<title>日程確定(アポ確定)</title>
+<style>
+    /* レイアウト維持 */
+    .remind-simple {
+        animation: fadeblink-simple 1s infinite;
+    }
+    @keyframes fadeblink-simple {
+        0% {opacity:1;}
+        50% {opacity:0.2;}
+        100% {opacity:1;}
+    }
+    .copy-btn-feedback { background-color: #dcedc8 !important; }
+</style>
 </head>
 <body>
 
 <h3>日程確定(アポ確定)</h3>
-<button id="clearBtn">全てクリア</button><hr>
 
-<textarea id="lineName" rows="2" placeholder="LINE名" class="bg-yellow"></textarea>
-<button class="copy" data-target="lineName">コピー</button><br>
+<hr>
+<button type="button" id="clearBtn">クリア</button><br>
 
-<textarea id="meetingDate" rows="2" placeholder="面談日時" class="bg-green"></textarea>
-<p><b>流入経路：</b></p>
-<div id="entry-container">読み込み中...</div><hr>
+<textarea id="lineName" rows="2" cols="25" placeholder="LINE名" style="background-color:#fff9c4;"></textarea>
+<button type="button" class="copy-trigger" data-target="lineName">コピー</button>
+<br>
 
-<section>
-    <p><b>各種入力</b></p>
-    <ul>
-        <li><span class="title-blue">クローザー日程</span><span class="sub-text">担当：</span><div id="closer-list"></div></li>
-        <li><span class="title-blue">Googleカレンダー</span><textarea id="calendarTitle" rows="2"></textarea><button class="copy" data-target="calendarTitle">コピー</button>
-            <div><span class="remind">メール送信 忘れずに！</span></div>
-        </li>
-        <li><span class="title-blue">個別相談ステータス</span><span class="sub-text">※再調整は既存更新</span></li>
-    </ul><hr>
-    <p><b>UTAGE画面</b></p>
-    <ul>
-        <li><span class="title-red">ラベルを貼る</span><span class="highlight">⭕日程確定</span><br><span id="labelDisp" class="highlight">（クローザー）担当者名</span></li>
-        <li><span class="title-red">Zoomリンク送信</span><textarea id="output" rows="8"></textarea><button class="copy" data-target="output">コピー</button></li>
-        <li><span class="title-red">雑談スタート</span><textarea id="extra" rows="3"></textarea><button class="copy" data-target="extra">コピー</button></li>
-        <li><span class="title-red">ラベル</span><span class="highlight">サポート申込済</span></li>
-    </ul>
+<textarea id="meetingDate" rows="2" cols="25" placeholder="面談日時" style="background-color:#e8f5e9;"></textarea>
+<br>
+
+<p style="font-size:12px; font-weight:bold;">流入経路：</p>
+<div id="entry-container">読み込み中...</div>
+<br><br>
+<hr>
+
+<section style="font-size:12px; line-height:1.6;">
+  <p style="font-weight:bold;">各種入力</p>
+  <ul>
+    <li>
+        <span style="color:blue; font-weight:bold; font-size:18px;">クローザー日程</span><br>
+        <span style="color:gray;">担当クローザー：</span><br>
+        <div id="closer-list">読み込み中...</div>
+        <br>
+    </li>
+    <li>
+        <span style="color:blue; font-weight:bold; font-size:18px;">Googleカレンダー</span><br>
+        <span style="color:gray;">カレンダータイトル：</span><br>
+        <textarea id="calendarTitle" rows="3" cols="30"></textarea>
+        <button type="button" class="copy-trigger" data-target="calendarTitle">コピー</button>
+        <br><br>
+        <span class="remind-simple" style="background:#e0f0ff; color:#004a99; font-weight:bold; padding:6px 12px; border-radius:4px;">
+            メール送信 忘れずに！
+        </span>
+        <br><br>
+    </li>
+    <li>
+        <span style="color:blue; font-weight:bold; font-size:18px;">個別相談ステータス(広告)</span><br>
+        <span style="color:gray;">※再調整の場合、既存レコードを更新</span><br>
+    </li>
+  </ul>
+  <br>
+  <hr>
+
+  <p style="font-weight:bold;">UTAGE画面</p>
+  <ul>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;">ラベルを貼る</span><br>
+      <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「⭕日程確定（普通導線）」</span><br>
+      <span id="closer-label-display" style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「（クローザー）担当者名」</span><br>
+      <br>
+    </li>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;">【最新版】日程確定直後送付</span><br>
+      <span style="color:gray;">LINEテンプレート送信から選択、送信</span><br>
+      <br>
+    </li>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;"> Zoomリンク送信</span><br>
+      <span style="color:gray;">※再調整の場合、無料プレゼントの部分を消す</span><br>
+      <textarea id="output" rows="18" cols="30"></textarea>
+      <button type="button" class="copy-trigger" data-target="output">コピー</button>
+      <br><br>
+    </li>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;">雑談スタート</span><br>
+      <span style="color:gray;">呼び方は苗字または名前に寄せる</span><br>
+      <textarea id="extraQuestion" rows="5" cols="30"></textarea>
+      <button type="button" class="copy-trigger" data-target="extraQuestion">コピー</button>
+      <br><br>
+    </li>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;">メインアカウントにラベルを貼る</span><br>
+      <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「サポート申込済」</span><br>
+    </li>
+  </ul>
 </section>
 
 <script type="module">
@@ -52,44 +102,64 @@
     import { initEntrySelect } from './entry-select.js';
 
     const $ = id => document.getElementById(id);
-    const getEl = query => document.querySelector(query);
+    const getSelect = parentId => document.querySelector(`#${parentId} select`);
+
+    function resetAll() {
+        $('meetingDate').value = "";
+        $('calendarTitle').value = "";
+        $('output').value = "";
+        $('extraQuestion').value = "";
+        $('closer-label-display').textContent = "「（クローザー）担当者名」";
+        
+        const s1 = getSelect('closer-list');
+        if (s1) { s1.selectedIndex = 0; s1.style.backgroundColor = "#fff"; }
+        const s2 = getSelect('entry-container');
+        if (s2) { s2.selectedIndex = 0; }
+    }
 
     function update() {
         const name = $('lineName').value.trim();
         const date = $('meetingDate').value.trim();
-        const entry = getEl('#entry-select')?.value || "";
-        const staff = getEl('#closer-list select');
-        const zoom = staff?.value || "";
-        const sName = staff?.selectedIndex > 0 ? staff.options[staff.selectedIndex].text.split('（')[0] : "";
+        const entry = getSelect('entry-container')?.value || "";
+        const staff = getSelect('closer-list');
+        
+        // 修正ポイント: staff(select要素)が存在する場合にvalue(Zoom URL)を取得
+        const zoomLink = staff ? staff.value : "";
+        const sName = (staff && staff.selectedIndex > 0) ? staff.options[staff.selectedIndex].text.split('（')[0] : "";
 
         $('calendarTitle').value = (name && entry) ? `${entry}${name}` : "";
-        $('labelDisp').textContent = sName ? `「（クローザー）${sName}」` : "「（クローザー）担当者名」";
-        $('extra').value = name ? `${name}さんはこれまで副業やったことありますか？` : "";
-        $('output').value = (name && date && zoom) ? `実施日：${date}\n\n${zoom}\n\n【無料プレゼントはこちら👇】\nhttps://forms.gle/i2XPWLVQE44iYc7b8` : "";
-    }
+        $('closer-label-display').textContent = sName ? `「（クローザー）${sName}」` : "「（クローザー）担当者名」";
+        $('extraQuestion').value = name ? `${name}さんはこれまで副業やったことありますか？` : "";
 
-    const reset = () => {
-        ['meetingDate', 'calendarTitle', 'output', 'extra'].forEach(id => $(id).value = "");
-        $('labelDisp').textContent = "「（クローザー）担当者名」";
-        getEl('#closer-list select') && (getEl('#closer-list select').selectedIndex = 0);
-        getEl('#closer-list select') && (getEl('#closer-list select').style.backgroundColor = "#fff");
-        getEl('#entry-select') && (getEl('#entry-select').selectedIndex = 0);
-    };
+        // 修正ポイント: ${zoomLink} を確実に反映
+        if (name && date && zoomLink) {
+            $('output').value = `実施日：${date}\n\n${zoomLink}\n\n【無料プレゼントはこちら👇】\nhttps://forms.gle/i2XPWLVQE44iYc7b8`;
+        } else {
+            $('output').value = "";
+        }
+    }
 
     initCloserSelect('closer-list', 'unused', update);
     initEntrySelect('entry-container', update);
 
-    $('lineName').oninput = () => { reset(); update(); };
+    $('lineName').oninput = () => { resetAll(); update(); };
     $('meetingDate').oninput = update;
-    $('clearBtn').onclick = () => { if(confirm("クリア？")) { $('lineName').value = ""; reset(); update(); }};
+    $('clearBtn').onclick = () => { if(confirm("クリアしますか？")) { $('lineName').value = ""; resetAll(); update(); }};
 
-    document.querySelectorAll('.copy').forEach(btn => {
+    document.querySelectorAll('.copy-trigger').forEach(btn => {
         btn.onclick = async () => {
-            const el = $(btn.dataset.target);
-            if (!el.value) return alert("空です");
-            await navigator.clipboard.writeText(el.value);
-            const old = btn.textContent; btn.textContent = "OK!";
-            setTimeout(() => btn.textContent = old, 1000);
+            const target = $(btn.dataset.target);
+            if (!target.value.trim()) return;
+            try {
+                await navigator.clipboard.writeText(target.value);
+                const txt = btn.textContent;
+                btn.textContent = "コピー完了！";
+                btn.classList.add('copy-btn-feedback');
+                setTimeout(() => { btn.textContent = txt; btn.classList.remove('copy-btn-feedback'); }, 1000);
+            } catch (e) {
+                target.select();
+                document.execCommand("copy");
+            }
         };
     });
 </script>
