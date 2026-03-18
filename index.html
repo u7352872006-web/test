@@ -2,69 +2,55 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>セールスマン選択123</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>セールスマン選択システム</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .container { max-width: 400px; }
-        select { width: 100%; padding: 8px; margin-top: 10px; cursor: pointer; }
-        .loading { color: #666; font-size: 0.9em; }
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            padding-top: 50px;
+            background-color: #f0f2f5;
+        }
+        .select-card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+        /* JSで生成されるセレクトボックスのスタイル */
+        select {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <label for="salesman-select">セールスマンを選択してください：</label>
-    <div id="loader" class="loading">データを読み込み中...</div>
-    
-    <select id="salesman-select" style="display:none;">
-        <option value="">-- 選択してください --</option>
-    </select>
-</div>
-
-<script>
-async function loadSalesmanData() {
-    const API_URL = "https://script.google.com/macros/s/AKfycbxb282oIXg6UrpqJ1MM2txXEriwJnq8nHiUFqZTpyoI8FJ4zOHFjrQKvqnDhteA9qTl/exec";
-    const selectEl = document.getElementById('salesman-select');
-    const loader = document.getElementById('loader');
-
-    try {
-        // GASからデータを取得
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error('ネットワーク応答が正常ではありません');
+    <div class="select-card">
+        <h2>担当者を選択（ランク順）</h2>
         
-        const data = await response.json();
+        <div id="closer-list"></div>
+    </div>
 
-        // データをループしてoptionタグを作成
-        data.forEach(item => {
-            const option = document.createElement('option');
-            // 表示形式を「名前（ランク）」に設定
-            option.textContent = `${item.name}（${item.rank}）`;
-            // 値にはZoomリンクを設定（後で使いやすいため）
-            option.value = item.zoom;
-            selectEl.appendChild(option);
-        });
+    <script type="module">
+        import { initCloserSelect } from './closer-select.js';
 
-        // UIの切り替え
-        loader.style.display = 'none';
-        selectEl.style.display = 'block';
-
-    } catch (error) {
-        console.error('エラー発生:', error);
-        loader.textContent = 'データの読み込みに失敗しました。';
-    }
-}
-
-// ページ読み込み時に実行
-window.addEventListener('DOMContentLoaded', loadSalesmanData);
-
-// (任意) 選択した時の挙動
-document.getElementById('salesman-select').addEventListener('change', (e) => {
-    if(e.target.value) {
-        console.log("選択されたZoomリンク:", e.target.value);
-        // 必要に応じて window.open(e.target.value) などで遷移
-    }
-});
-</script>
+        // 要素IDを指定して実行
+        initCloserSelect('closer-list');
+    </script>
 
 </body>
 </html>
