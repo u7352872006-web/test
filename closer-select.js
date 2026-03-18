@@ -1,9 +1,8 @@
 const DATA_URL = "https://script.google.com/macros/s/AKfycbxb282oIXg6UrpqJ1MM2txXEriwJnq8nHiUFqZTpyoI8FJ4zOHFjrQKvqnDhteA9qTl/exec";
 
-// ランク順と背景色
-const RANK_ORDER = ["トップセールス", "2軍", "3軍", "研修生", "審査落ち"];
+const RANK_ORDER = ["1軍", "2軍", "3軍", "研修生", "審査落ち"];
 const RANK_COLOR = {
-  "トップセールス": "#d1e7dd",
+  "1軍": "#d1e7dd",
   "2軍": "#cff4fc",
   "3軍": "#fff3cd",
   "研修生": "#f8d7da",
@@ -11,7 +10,7 @@ const RANK_COLOR = {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const select = document.getElementById("select");
+  const select = document.getElementById("closerSelect");
   const zoomInput = document.getElementById("zoom");
 
   let data = [];
@@ -20,9 +19,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const res = await fetch(DATA_URL);
     const jsonData = await res.json();
-    // 引退を除外
+    // 引退除外
     data = jsonData.filter(item => item.rank !== "引退");
-  } catch (e) {
+  } catch(e) {
     console.error("データ取得エラー:", e);
     select.innerHTML = "<option>データ取得に失敗しました</option>";
     return;
@@ -38,10 +37,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     defaultOpt.textContent = "選択してください";
     select.appendChild(defaultOpt);
 
-    // ランク順にオプションを追加
+    // ランク順に追加
     RANK_ORDER.forEach(rank => {
       const items = data.filter(item => item.rank === rank);
-
       items.forEach(item => {
         const opt = document.createElement("option");
         opt.value = item.name;
@@ -51,7 +49,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     });
 
-    // 初期状態ではZoomリンクは空
     zoomInput.value = "";
   }
 
