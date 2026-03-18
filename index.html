@@ -2,19 +2,20 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta charset="UTF-8">
   <title>クローザー選択</title>
 </head>
 <body>
   <h2>クローザー選択</h2>
 
+  <!-- Zoomリンク表示用テキストボックス -->
   <label>Zoomリンク:</label>
   <input id="zoom" type="text" readonly style="width:100%; margin-bottom:8px; padding:6px;">
 
+  <!-- プルダウン -->
   <label>クローザーを選択:</label>
-  <input type="text" id="search" placeholder="検索… (名前入力)" style="width:100%; margin-bottom:4px; padding:6px;">
   <select id="select" style="width:100%; padding:6px;"></select>
 
+  <!-- JavaScriptモジュール読み込み -->
   <script type="module" src="closer-select.js"></script>
 </body>
 </html>
