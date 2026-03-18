@@ -12,12 +12,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const res = await fetch(DATA_URL);
     const json = await res.json();
 
-    // ヘッダーなし前提 → item[0]=名前, item[1]=zoom, item[2]=rank
-    data = json.map(item => ({
-      name: item[0],
-      zoom: item[1],
-      rank: item[2]
-    }));
+    // 引退除外
+    data = json.filter(item => item.rank !== "引退");
 
   } catch (e) {
     select.innerHTML = "<option>取得失敗</option>";
@@ -25,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // 並び替え
+  // ランク順にソート
   data.sort((a, b) => RANK_ORDER.indexOf(a.rank) - RANK_ORDER.indexOf(b.rank));
 
   // プルダウン生成
@@ -38,7 +34,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   data.forEach(item => {
     const opt = document.createElement("option");
     opt.value = item.name;
-    opt.textContent = `${item.name} (${item.rank})`; // ← ランク表示を追加
+    opt.textContent = `${item.name} (${item.rank})`;
     select.appendChild(opt);
   });
 
