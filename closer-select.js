@@ -1,64 +1,63 @@
-class ClosersModule extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-    this.data = [];
+// Apps ScriptのJSONデータURL
+const DATA_URL = "https://script.google.com/macros/s/AKfycbxb282oIXg6UrpqJ1MM2txXEriwJnq8nHiUFqZTpyoI8FJ4zOHFjrQKvqnDhteA9qTl/exec";
+
+// ランクの順序
+const RANK_ORDER = ["トップセールス", "2軍", "3軍", "研修生", "審査落ち"];
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const zoomInput = document.getElementById("zoom");
+  const showBtn = document.getElementById("showModal");
+  const modal = document.getElementById("modal");
+  const modalContent = document.getElementById("modalContent");
+  const closeBtn = document.getElementById("closeModal");
+
+  // データ取得
+  let data = [];
+  try {
+    const res = await fetch(DATA_URL);
+    data = await res.json();
+  } catch(e) {
+    modalContent.innerText = "データ取得に失敗しました";
+    console.error(e);
   }
 
-  connectedCallback() {
-    this.url = this.getAttribute("url"); // Apps Script URL
-    this.renderBase();
-    this.loadData();
-  }
+  // ボタン押下でモーダル表示
+  showBtn.addEventListener("click", () => {
+    modal.style.display = "flex";
+    renderModal(data);
+  });
 
-  renderBase() {
-    this.shadowRoot.innerHTML = `
-      <input id="search" type="text" placeholder="名前検索">
-      <div id="list" style="margin-bottom:8px;"></div>
-      <label>Zoomリンク:</label>
-      <input id="zoom" type="text" readonly style="width:100%;">
-      <style>
-        input { width: 100%; padding: 6px; margin-bottom: 4px; }
-        .item { padding: 6px; cursor: pointer; border-bottom: 1px solid #eee; }
-        .item:hover { background: #f0f0f0; }
-      </style>
-    `;
+  // モーダル閉じる
+  closeBtn.addEventListener("click", () => modal.style.display = "none");
 
-    this.shadowRoot.querySelector("#search")
-      .addEventListener("input", e => this.renderList(e.target.value));
-  }
+  // モーダルレンダリング
+  function renderModal(data) {
+    modalContent.innerHTML = "";
 
-  async loadData() {
-    try {
-      const res = await fetch(this.url);
-      this.data = await res.json(); // Apps ScriptからJSON取得
-      this.renderList("");
-    } catch(e) {
-      console.error("データ取得エラー:", e);
-      this.shadowRoot.querySelector("#list").textContent = "データ取得に失敗しました";
-    }
-  }
+    RANK_ORDER.forEach(rank => {
+      const rankDiv = document.createElement("div");
+      const rankTitle = document.createElement("h4");
+      rankTitle.textContent = rank;
+      rankDiv.appendChild(rankTitle);
 
-  renderList(keyword) {
-    const list = this.shadowRoot.querySelector("#list");
-    list.innerHTML = "";
+      const rankButtons = document.createElement("div");
+      rankButtons.style.display = "flex";
+      rankButtons.style.flexWrap = "wrap";
+      rankButtons.style.gap = "6px";
 
-    const filtered = this.data.filter(item =>
-      item.name.toLowerCase().includes(keyword.toLowerCase())
-    );
+      data.filter(item => item.rank === rank)
+          .forEach(item => {
+            const btn = document.createElement("button");
+            btn.textContent = item.name;
+            btn.onclick = () => {
+              zoomInput.value = item.zoom;
+              modal.style.display = "none";
+            };
+            rankButtons.appendChild(btn);
+          });
 
-    filtered.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "item";
-      div.textContent = item.name + (item.rank ? ` (${item.rank})` : '');
-      div.onclick = () => {
-        this.shadowRoot.querySelector("#zoom").value = item.zoom;
-      };
-      list.appendChild(div);
+      rankDiv.appendChild(rankButtons);
+      modalContent.appendChild(rankDiv);
     });
-
-    this.shadowRoot.querySelector("#zoom").value = filtered[0]?.zoom || "";
   }
-}
-
-customElements.define("closer-select", ClosersModule);
+});
