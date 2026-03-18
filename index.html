@@ -36,7 +36,7 @@
 
 <input type="hidden" id="zoom-url">
 
-<textarea id="output" rows="20" cols="30" style="background:#f9f9f9;" readonly></textarea>
+<textarea id="output" rows="15" cols="30" style="background:#f9f9f9;" readonly></textarea>
 <br>
 
 <button id="copyBtn">コピー</button>
@@ -50,17 +50,21 @@
     const copyBtn = document.getElementById("copyBtn");
 
     function generateText() {
-        const time = meetingTimeInput.value;
+        const rawTime = meetingTimeInput.value; // "10:00" など
         const url = zoomUrlInput.value; 
         
         const selectEl = document.querySelector('#closer-list select');
-        if (!selectEl || !selectEl.value || !time) {
+        if (!selectEl || !selectEl.value || !rawTime) {
             output.value = "";
             return;
         }
 
+        // 時間表記の変換ロジック
+        // 10:00 -> 10時 / 11:30 -> 11時半
+        const timeDisplay = rawTime.replace(':00', '時').replace(':30', '時半');
+
         output.value = `お疲れ様です！
-明日の${time}からは予定通りよろしくお願いします😊
+明日の${timeDisplay}からは予定通りよろしくお願いします😊
 
 時間になったらご参加ください。
 
