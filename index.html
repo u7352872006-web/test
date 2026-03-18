@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>前日メッセージ送付</title>
+</head>
+<body>
+
+<h3>前日メッセージ送付🌙</h3>
+
+<label>
+    面談時間：
+    <select id="meetingTime">
+        <option value="">選択してください</option>
+        <option value="10:00">10:00</option>
+        <option value="11:30">11:30</option>
+        <option value="13:00">13:00</option>
+        <option value="14:30">14:30</option>
+        <option value="16:00">16:00</option>
+        <option value="17:30">17:30</option>
+        <option value="18:30">18:30</option>
+        <option value="19:00">19:00</option>
+        <option value="20:30">20:30</option>
+        <option value="21:00">21:00</option>
+        <option value="21:30">21:30</option>
+        <option value="22:00">22:00</option>
+    </select>
+</label>
+<br><br>
+
+<label>
+    担当者：
+    <span id="closer-list">読み込み中...</span>
+</label>
+<br><br>
+
+<input type="hidden" id="zoom-url">
+
+<textarea id="output" rows="10" cols="40" style="background:#f9f9f9;" readonly></textarea>
+<br>
+
+<button id="copyBtn">コピー</button>
+
+<script type="module">
+    import { initCloserSelect } from './closer-select.js';
+
+    const meetingTimeInput = document.getElementById("meetingTime");
+    const zoomUrlInput = document.getElementById("zoom-url");
+    const output = document.getElementById("output");
+    const copyBtn = document.getElementById("copyBtn");
+
+    function generateText() {
+        const time = meetingTimeInput.value;
+        const url = zoomUrlInput.value; 
+        
+        const selectEl = document.querySelector('#closer-list select');
+        if (!selectEl || !selectEl.value || !time) {
+            output.value = "";
+            return;
+        }
+
+        output.value = `お疲れ様です！
+明日の${time}からは予定通りよろしくお願いします😊
+
+時間になったらご参加ください。
+
+${url}`;
+    }
+
+    initCloserSelect('closer-list', 'zoom-url', generateText);
+    meetingTimeInput.addEventListener("change", generateText);
+
+    copyBtn.addEventListener("click", () => {
+        output.select();
+        document.execCommand("copy");
+    });
+</script>
+
+</body>
+</html>
