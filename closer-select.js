@@ -1,4 +1,4 @@
-const DATA_URL = "https://script.google.com/macros/s/AKfycbxb282oIXg6UrpqJ1MM2txXEriwJnq8nHiUFqZTpyoI8FJ4zOHFjrQKvqnDhteA9qTl/exec";
+const DATA_URL = "https://script.google.com/macros/s/YOUR_DEPLOYED_URL/exec"; // ←最新デプロイURLに置き換える
 
 const RANK_ORDER = ["トップセールス", "2軍", "3軍", "研修生", "審査落ち"];
 
@@ -12,8 +12,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const res = await fetch(DATA_URL);
     const json = await res.json();
 
-    // 引退除外
-    data = json.filter(item => item.rank !== "引退");
+    // 🔹 ヘッダーあり形式前提（A=name, B=zoom, C=rank）
+    data = json
+      .filter(item => item.rank !== "引退")
+      .map(item => ({
+        name: item.name,
+        zoom: item.zoom,
+        rank: item.rank
+      }));
 
   } catch (e) {
     select.innerHTML = "<option>取得失敗</option>";
