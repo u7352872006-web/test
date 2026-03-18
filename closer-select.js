@@ -12,34 +12,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     const res = await fetch(DATA_URL);
     const json = await res.json();
 
-    // 必要な形に変換（A=名前, B=zoom, C=ランク）
+    // ヘッダーなし前提 → item[0]=名前, item[1]=zoom, item[2]=rank
     data = json.map(item => ({
-      name: item.name,
-      zoom: item.zoom,
-      rank: item.rank
+      name: item[0],
+      zoom: item[1],
+      rank: item[2]
     }));
 
   } catch (e) {
     select.innerHTML = "<option>取得失敗</option>";
+    console.error(e);
     return;
   }
 
   // 並び替え
-  data.sort((a, b) => {
-    return RANK_ORDER.indexOf(a.rank) - RANK_ORDER.indexOf(b.rank);
-  });
+  data.sort((a, b) => RANK_ORDER.indexOf(a.rank) - RANK_ORDER.indexOf(b.rank));
 
-  // プルダウン作成
-  data.forEach((item, index) => {
+  // プルダウン生成
+  select.innerHTML = "";
+  const defaultOpt = document.createElement("option");
+  defaultOpt.value = "";
+  defaultOpt.textContent = "選択してください";
+  select.appendChild(defaultOpt);
+
+  data.forEach(item => {
     const opt = document.createElement("option");
-    opt.value = index;
-    opt.textContent = item.name;
+    opt.value = item.name;
+    opt.textContent = `${item.name} (${item.rank})`; // ← ランク表示を追加
     select.appendChild(opt);
   });
 
   // 選択時
   select.addEventListener("change", () => {
-    const selected = data[select.value];
+    const selected = data.find(d => d.name === select.value);
     zoomInput.value = selected ? selected.zoom : "";
   });
 });
