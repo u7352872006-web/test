@@ -1,6 +1,6 @@
 const DATA_URL = "https://script.google.com/macros/s/AKfycbxb282oIXg6UrpqJ1MM2txXEriwJnq8nHiUFqZTpyoI8FJ4zOHFjrQKvqnDhteA9qTl/exec";
 
-const RANK_ORDER = ["1軍", "2軍", "3軍", "研修生", "審査落ち"];
+const RANK_ORDER = ["トップセールス", "2軍", "3軍", "研修生", "審査落ち"];
 
 document.addEventListener("DOMContentLoaded", async () => {
   const select = document.getElementById("closerSelect");
