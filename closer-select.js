@@ -1,52 +1,49 @@
 const DATA_URL = "https://script.google.com/macros/s/AKfycbxb282oIXg6UrpqJ1MM2txXEriwJnq8nHiUFqZTpyoI8FJ4zOHFjrQKvqnDhteA9qTl/exec";
 
 const RANK_ORDER = ["1軍", "2軍", "3軍", "研修生", "審査落ち"];
-const RANK_COLOR = {
-  "1軍": "#d1e7dd",
-  "2軍": "#cff4fc",
-  "3軍": "#fff3cd",
-  "研修生": "#f8d7da",
-  "審査落ち": "#e2e3e5"
-};
 
 document.addEventListener("DOMContentLoaded", async () => {
   const select = document.getElementById("closerSelect");
   const zoomInput = document.getElementById("zoom");
+  const searchInput = document.getElementById("search");
 
   let data = [];
 
-  // データ取得
   try {
     const res = await fetch(DATA_URL);
     const jsonData = await res.json();
-    // 引退除外
     data = jsonData.filter(item => item.rank !== "引退");
-  } catch(e) {
-    console.error("データ取得エラー:", e);
-    select.innerHTML = "<option>データ取得に失敗しました</option>";
+  } catch (e) {
+    select.innerHTML = "<option>データ取得失敗</option>";
     return;
   }
 
-  // プルダウン生成
-  function renderOptions() {
+  function renderOptions(filter = "") {
     select.innerHTML = "";
 
-    // 初期値
     const defaultOpt = document.createElement("option");
     defaultOpt.value = "";
     defaultOpt.textContent = "選択してください";
     select.appendChild(defaultOpt);
 
-    // ランク順に追加
     RANK_ORDER.forEach(rank => {
-      const items = data.filter(item => item.rank === rank);
-      items.forEach(item => {
+      const items = data
+        .filter(item => item.rank === rank)
+        .filter(item => item.name.includes(filter));
+
+      if (items.length === 0) return;
+
+      const group = document.createElement("optgroup");
+      group.label = rank;
+
+      items.forEach((item, index) => {
         const opt = document.createElement("option");
-        opt.value = item.name;
-        opt.textContent = `${item.name} (${item.rank})`;
-        opt.style.backgroundColor = RANK_COLOR[rank] || "#fff";
-        select.appendChild(opt);
+        opt.value = index;
+        opt.textContent = item.name;
+        group.appendChild(opt);
       });
+
+      select.appendChild(group);
     });
 
     zoomInput.value = "";
@@ -54,9 +51,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   renderOptions();
 
-  // 選択時にZoomリンク反映
+  searchInput.addEventListener("input", () => {
+    renderOptions(searchInput.value);
+  });
+
   select.addEventListener("change", () => {
-    const selected = data.find(d => d.name === select.value);
+    const selected = data[select.value];
     zoomInput.value = selected ? selected.zoom : "";
   });
 });
