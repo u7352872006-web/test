@@ -5,11 +5,11 @@ export async function initCloserSelect(targetId, inputId, onChangeCallback) {
 
     const rankOrder = ["トップセールス", "2軍", "3軍", "研修生", "審査落ち"];
     const colors = {
-        "トップセールス": "#ffeb3b",
-        "2軍": "#c8e6c9",
-        "3軍": "#e3f2fd",
-        "研修生": "#f5f5f5",
-        "審査落ち": "#ffcdd2"
+        "トップセールス": "#F4CCCC",
+        "2軍": "#CFE2F3",
+        "3軍": "#FFF2CC",
+        "研修生": "#D9EAD3",
+        "審査落ち": "#B4A7D6"
     };
 
     try {
