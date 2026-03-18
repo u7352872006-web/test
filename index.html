@@ -4,106 +4,46 @@
     <meta charset="UTF-8">
     <title>日程確定(アポ確定)</title>
     <style>
-        /* レイアウト・全体設定 */
-        body { font-family: sans-serif; padding: 20px; color: #333; }
-        .manual-section { font-size: 12px; line-height: 1.6; }
-        .manual-section ul { padding-left: 0; }
-        .manual-section li { margin-bottom: 20px; list-style: none; }
-        
-        /* テキストエリア・入力 */
-        textarea { display: block; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; }
-        .bg-yellow { background-color: #fff9c4; }
-        .bg-green { background-color: #e8f5e9; }
-
-        /* タイトル・ラベル共通クラス */
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; font-size: 12px; line-height: 1.6; }
+        textarea { width: 100%; display: block; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .bg-yellow { background-color: #fff9c4; } .bg-green { background-color: #e8f5e9; }
         .title-blue { color: blue; font-weight: bold; font-size: 18px; display: block; }
         .title-red { color: #B22222; font-weight: bold; font-size: 18px; display: block; }
-        .sub-text { color: gray; display: block; font-size: 11px; }
-        .highlight-label { font-weight: bold; background-color: #fff9c4; padding: 2px 4px; display: inline-block; margin-top: 4px; }
-
-        /* アニメーション付きリマインド */
-        .remind-simple {
-            background: #e0f0ff; color: #004a99; font-weight: bold; 
-            padding: 6px 12px; border-radius: 4px; display: inline-block;
-            margin-top: 10px;
-            animation: fadeblink-simple 1s infinite;
-        }
-        @keyframes fadeblink-simple { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
-
+        .sub-text { color: gray; font-size: 11px; display: block; }
+        .highlight { font-weight: bold; background: #fff9c4; padding: 2px 4px; display: inline-block; margin: 4px 0; }
+        .remind { background: #e0f0ff; color: #004a99; font-weight: bold; padding: 6px 12px; border-radius: 4px; display: inline-block; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.2; } }
         hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
+        li { list-style: none; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
 <h3>日程確定(アポ確定)</h3>
+<button id="clearBtn">全てクリア</button><hr>
 
-<button type="button" id="clearBtn">クリア</button>
-<hr>
+<textarea id="lineName" rows="2" placeholder="LINE名" class="bg-yellow"></textarea>
+<button class="copy" data-target="lineName">コピー</button><br>
 
-<textarea id="lineName" rows="2" cols="25" placeholder="LINE名" class="bg-yellow"></textarea>
-<button type="button" id="lineNameCopyBtn">コピー</button>
-<br>
+<textarea id="meetingDate" rows="2" placeholder="面談日時" class="bg-green"></textarea>
+<p><b>流入経路：</b></p>
+<div id="entry-container">読み込み中...</div><hr>
 
-<textarea id="meetingDate" rows="2" cols="25" placeholder="面談日時" class="bg-green"></textarea>
-<br>
-
-<p style="font-size:12px; font-weight:bold; margin-bottom: 5px;">流入経路：</p>
-<div id="entry-container">読み込み中...</div>
-
-<hr>
-
-<section class="manual-section">
+<section>
     <p><b>各種入力</b></p>
     <ul>
-        <li>
-            <span class="title-blue">クローザー日程</span>
-            <span class="sub-text">担当クローザー：</span>
-            <div id="closer-list">読み込み中...</div>
+        <li><span class="title-blue">クローザー日程</span><span class="sub-text">担当：</span><div id="closer-list"></div></li>
+        <li><span class="title-blue">Googleカレンダー</span><textarea id="calendarTitle" rows="2"></textarea><button class="copy" data-target="calendarTitle">コピー</button>
+            <div><span class="remind">メール送信 忘れずに！</span></div>
         </li>
-        <li>
-            <span class="title-blue">Googleカレンダー</span>
-            <span class="sub-text">カレンダータイトル：</span>
-            <textarea id="calendarTitle" rows="3" cols="30" readonly></textarea>
-            <button type="button" id="calendarCopyBtn">コピー</button>
-            <div>
-                <span class="remind-simple">メール送信 忘れずに！</span>
-            </div>
-        </li>
-        <li>
-            <span class="title-blue">個別相談ステータス(広告)</span>
-            <span class="sub-text">※再調整の場合、既存レコードを更新</span>
-        </li>
-    </ul>
-
-    <hr>
-
+        <li><span class="title-blue">個別相談ステータス</span><span class="sub-text">※再調整は既存更新</span></li>
+    </ul><hr>
     <p><b>UTAGE画面</b></p>
     <ul>
-        <li>
-            <span class="title-red">ラベルを貼る</span>
-            <span class="highlight-label">「⭕日程確定（普通導線）」</span><br>
-            <span id="closer-label-display" class="highlight-label">「（クローザー）担当者名」</span>
-        </li>
-        <li>
-            <span class="title-red">【最新版】日程確定直後送付</span>
-            <span class="sub-text">LINEテンプレート送信から選択、送信</span>
-        </li>
-        <li>
-            <span class="title-red">Zoomリンク送信</span>
-            <span class="sub-text">※再調整の場合、無料プレゼントの部分を消す</span>
-            <textarea id="output" rows="12" cols="30"></textarea>
-            <button id="copyBtn">コピー</button>
-        </li>
-        <li>
-            <span class="title-red">雑談スタート</span>
-            <span class="sub-text">苗字または名前に寄せて呼ぶ（例：山田さん）</span>
-            <textarea id="extraQuestion" rows="5" cols="30"></textarea>
-            <button id="extraCopyBtn">コピー</button>
-        </li>
-        <li>
-            <span class="title-red">メインアカウントにラベルを貼る</span>
-            <span class="highlight-label">「サポート申込済」</span>
-        </li>
+        <li><span class="title-red">ラベルを貼る</span><span class="highlight">⭕日程確定</span><br><span id="labelDisp" class="highlight">（クローザー）担当者名</span></li>
+        <li><span class="title-red">Zoomリンク送信</span><textarea id="output" rows="8"></textarea><button class="copy" data-target="output">コピー</button></li>
+        <li><span class="title-red">雑談スタート</span><textarea id="extra" rows="3"></textarea><button class="copy" data-target="extra">コピー</button></li>
+        <li><span class="title-red">ラベル</span><span class="highlight">サポート申込済</span></li>
     </ul>
 </section>
 
@@ -111,96 +51,47 @@
     import { initCloserSelect } from './closer-select.js';
     import { initEntrySelect } from './entry-select.js';
 
-    const lineNameInput = document.getElementById("lineName");
-    const meetingDateInput = document.getElementById("meetingDate");
-    const calendarTitleInput = document.getElementById("calendarTitle");
-    const output = document.getElementById("output");
-    const extraQuestion = document.getElementById("extraQuestion");
-    const closerLabelDisplay = document.getElementById("closer-label-display");
+    const $ = id => document.getElementById(id);
+    const getEl = query => document.querySelector(query);
 
-    // 全初期化（LINE名以外）
-    function resetAll() {
-        meetingDateInput.value = "";
-        calendarTitleInput.value = "";
-        output.value = "";
-        extraQuestion.value = "";
-        closerLabelDisplay.textContent = "「（クローザー）担当者名」";
-        
-        const staffSelect = document.querySelector('#closer-list select');
-        if (staffSelect) {
-            staffSelect.selectedIndex = 0;
-            staffSelect.style.backgroundColor = "#ffffff";
-        }
-        
-        const entrySelect = document.querySelector('#entry-container select');
-        if (entrySelect) {
-            entrySelect.selectedIndex = 0;
-        }
+    function update() {
+        const name = $('lineName').value.trim();
+        const date = $('meetingDate').value.trim();
+        const entry = getEl('#entry-select')?.value || "";
+        const staff = getEl('#closer-list select');
+        const zoom = staff?.value || "";
+        const sName = staff?.selectedIndex > 0 ? staff.options[staff.selectedIndex].text.split('（')[0] : "";
+
+        $('calendarTitle').value = (name && entry) ? `${entry}${name}` : "";
+        $('labelDisp').textContent = sName ? `「（クローザー）${sName}」` : "「（クローザー）担当者名」";
+        $('extra').value = name ? `${name}さんはこれまで副業やったことありますか？` : "";
+        $('output').value = (name && date && zoom) ? `実施日：${date}\n\n${zoom}\n\n【無料プレゼントはこちら👇】\nhttps://forms.gle/i2XPWLVQE44iYc7b8` : "";
     }
 
-    // 更新ロジック
-    function updateContent() {
-        const lineName = lineNameInput.value.trim();
-        const meetingDate = meetingDateInput.value.trim();
-        
-        const entrySelect = document.querySelector('#entry-container select');
-        const mediaValue = (entrySelect && entrySelect.selectedIndex > 0) ? entrySelect.value : "";
-        
-        const staffSelect = document.querySelector('#closer-list select');
-        const zoomUrl = staffSelect ? staffSelect.value : "";
-        const staffOption = staffSelect ? staffSelect.options[staffSelect.selectedIndex] : null;
-        const staffName = (staffOption && staffOption.value) ? staffOption.text.split('（')[0] : "";
-
-        // カレンダータイトル
-        calendarTitleInput.value = (lineName && mediaValue) ? `${mediaValue}${lineName}` : "";
-
-        // ラベル
-        closerLabelDisplay.textContent = staffName ? `「（クローザー）${staffName}」` : "「（クローザー）担当者名」";
-
-        // Zoomメッセージ
-        if (lineName && meetingDate && zoomUrl) {
-            output.value = `実施日：${meetingDate}\n\n${zoomUrl}\n\n【無料プレゼントはこちら👇】\nhttps://forms.gle/i2XPWLVQE44iYc7b8`;
-        } else {
-            output.value = "";
-        }
-
-        // 雑談
-        extraQuestion.value = lineName ? `${lineName}さんはこれまで副業やったことありますか？` : "";
-    }
-
-    // 初期化実行
-    initCloserSelect('closer-list', 'unused-id', updateContent);
-    initEntrySelect('entry-container', updateContent);
-
-    // LINE名入力で全リセット
-    lineNameInput.addEventListener("input", () => {
-        resetAll();
-        updateContent();
-    });
-
-    meetingDateInput.addEventListener("input", updateContent);
-
-    // クリアボタン
-    document.getElementById("clearBtn").addEventListener("click", () => {
-        lineNameInput.value = "";
-        resetAll();
-        updateContent();
-    });
-
-    // コピー機能共通
-    const setupCopy = (btnId, targetEl) => {
-        document.getElementById(btnId).onclick = () => {
-            if (!targetEl.value) return;
-            targetEl.select();
-            document.execCommand("copy");
-        };
+    const reset = () => {
+        ['meetingDate', 'calendarTitle', 'output', 'extra'].forEach(id => $(id).value = "");
+        $('labelDisp').textContent = "「（クローザー）担当者名」";
+        getEl('#closer-list select') && (getEl('#closer-list select').selectedIndex = 0);
+        getEl('#closer-list select') && (getEl('#closer-list select').style.backgroundColor = "#fff");
+        getEl('#entry-select') && (getEl('#entry-select').selectedIndex = 0);
     };
-    setupCopy("lineNameCopyBtn", lineNameInput);
-    setupCopy("calendarCopyBtn", calendarTitleInput);
-    setupCopy("copyBtn", output);
-    setupCopy("extraCopyBtn", extraQuestion);
 
+    initCloserSelect('closer-list', 'unused', update);
+    initEntrySelect('entry-container', update);
+
+    $('lineName').oninput = () => { reset(); update(); };
+    $('meetingDate').oninput = update;
+    $('clearBtn').onclick = () => { if(confirm("クリア？")) { $('lineName').value = ""; reset(); update(); }};
+
+    document.querySelectorAll('.copy').forEach(btn => {
+        btn.onclick = async () => {
+            const el = $(btn.dataset.target);
+            if (!el.value) return alert("空です");
+            await navigator.clipboard.writeText(el.value);
+            const old = btn.textContent; btn.textContent = "OK!";
+            setTimeout(() => btn.textContent = old, 1000);
+        };
+    });
 </script>
-
 </body>
 </html>
