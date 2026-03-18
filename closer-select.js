@@ -1,4 +1,4 @@
-export async function initCloserSelect(targetId, inputId) {
+export async function initCloserSelect(targetId, inputId, onChangeCallback) {
     const API_URL = "https://script.google.com/macros/s/AKfycbxb282oIXg6UrpqJ1MM2txXEriwJnq8nHiUFqZTpyoI8FJ4zOHFjrQKvqnDhteA9qTl/exec";
     const container = document.getElementById(targetId);
     const urlInput = document.getElementById(inputId);
@@ -21,38 +21,27 @@ export async function initCloserSelect(targetId, inputId) {
             .sort((a, b) => rankOrder.indexOf(a.rank) - rankOrder.indexOf(b.rank));
 
         const select = document.createElement('select');
-        select.id = "main-select";
-        select.innerHTML = '<option value="" data-color="#ffffff">選択してください</option>';
+        select.innerHTML = '<option value="">選択してください</option>';
 
         filtered.forEach(item => {
             const option = document.createElement('option');
             option.textContent = `${item.name}（${item.rank}）`;
-            option.value = item.zoom; // これがB列のURL
-            
-            // ランクに応じた色をデータ属性として保持
-            const bgColor = colors[item.rank] || "#ffffff";
-            option.setAttribute('data-color', bgColor);
-            
-            // ブラウザ対応のためoption自体にもスタイル付与
-            option.style.backgroundColor = bgColor;
+            option.value = item.zoom;
+            option.style.backgroundColor = colors[item.rank] || "#ffffff";
             select.appendChild(option);
         });
 
-        // チェンジイベント
         select.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            
-            // 1. Zoomリンクをテキストボックスに即時反映
-            urlInput.value = this.value;
-
-            // 2. プルダウン自体の背景色を選択したランクの色に即時変更
-            const bgColor = selectedOption.getAttribute('data-color');
-            this.style.backgroundColor = bgColor;
+            urlInput.value = this.value; 
+            this.style.backgroundColor = this.options[this.selectedIndex].style.backgroundColor;
+            if (onChangeCallback) onChangeCallback();
         });
 
+        // 読み込み完了後に中身を入れ替える
+        container.innerHTML = '';
         container.appendChild(select);
 
     } catch (err) {
-        console.error("Fetch Error:", err);
+        container.innerHTML = 'エラー';
     }
 }
