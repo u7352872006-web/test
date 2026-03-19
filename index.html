@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>日程確定(アポ確定)</title>
+<style>
+  /* プルダウンの縦幅と全体のバランスを調整 */
+  select { padding: 4px; vertical-align: middle; }
+  .remind-simple{ animation: fadeblink-simple 1s infinite; }
+  @keyframes fadeblink-simple{ 0% {opacity:1;} 50% {opacity:0.2;} 100% {opacity:1;} }
+</style>
 </head>
 <body>
 
@@ -38,10 +44,6 @@
           <textarea id="calendarTitle" rows="3" cols="30" placeholder=""></textarea>
           <button type="button" id="calendarCopyBtn">コピー</button>
           <br><br>
-          <style>
-          .remind-simple{ animation: fadeblink-simple 1s infinite; }
-          @keyframes fadeblink-simple{ 0% {opacity:1;} 50% {opacity:0.2;} 100% {opacity:1;} }
-          </style>
           <span class="remind-simple" style="background:#e0f0ff; color:#004a99; font-weight:bold; padding:6px 12px; border-radius:4px;">
           メール送信 忘れずに！
           </span>
@@ -134,6 +136,7 @@ const updateZoomMessage = () => {
   const name = ui.lineName.value.trim();
   const date = ui.meetingDate.value.trim();
   
+  // 必須項目（名前と日時）がなければZoomメッセージを空にする
   if (!name || !date || !ui.hiddenZoom.value) {
     ui.zoomOutput.value = "";
     return;
@@ -144,9 +147,8 @@ const updateZoomMessage = () => {
 
 // --- イベントリスナー ---
 
-// LINE名が変更されたら、名前以外をリセット（名前の入力は邪魔しない）
 ui.lineName.oninput = () => {
-  resetAll(); 
+  resetAll(); // 名前以外を初期化
   ui.chatQuestion.value = ui.lineName.value ? `${ui.lineName.value}さんはこれまで副業やったことありますか？` : "";
   updateCalendarTitle();
   updateZoomMessage();
@@ -154,7 +156,6 @@ ui.lineName.oninput = () => {
 
 ui.meetingDate.oninput = updateZoomMessage;
 
-// 「初期化」ボタンクリック時
 document.getElementById("clearBtn").onclick = () => {
   ui.lineName.value = "";
   resetAll();
