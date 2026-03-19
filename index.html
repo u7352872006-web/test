@@ -1,147 +1,148 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>IS日程確定フロー（安定版）</title>
-<style>
-    /* スタイルは維持 */
-    body { font-family: sans-serif; background: #f4f7f9; padding: 20px; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6; }
-    .step-box { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 15px; border-left: 8px solid #ccc; transition: 0.3s; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    .step-active { border-left-color: #2196F3; box-shadow: 0 8px 15px rgba(33, 150, 243, 0.15); transform: scale(1.02); }
-    .step-disabled { opacity: 0.25; pointer-events: none; filter: grayscale(1); }
-    .step-done { border-left-color: #4CAF50; background: #f9fff9; }
-    .step-num { position: absolute; top: 10px; right: 15px; font-weight: bold; color: #999; font-size: 11px; }
-    .title { font-weight: bold; font-size: 16px; display: block; margin-bottom: 10px; }
-    .title-blue { color: #0d47a1; } .title-red { color: #b71c1c; }
-    textarea, select { width: 100%; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; padding: 10px; box-sizing: border-box; font-size: 14px; }
-    button { width: 100%; padding: 12px; cursor: pointer; border: none; border-radius: 4px; background: #2196F3; color: white; font-weight: bold; margin-top: 5px; }
-    .check-area { display: flex; align-items: center; background: #f0f0f0; padding: 10px; border-radius: 4px; margin-top: 8px; cursor: pointer; font-weight: bold; font-size: 13px; }
-    .check-area input { margin-right: 10px; transform: scale(1.3); }
-    .badge { font-weight: bold; background: #fff9c4; padding: 4px 8px; border: 1px solid #fbc02d; border-radius: 4px; display: inline-block; margin: 5px 0; }
-</style>
+  <meta charset="UTF-8">
+  <title>日程確定(アポ確定)</title>
 </head>
 <body>
 
-<h2 style="text-align:center;">IS日程確定 手順ガイド</h2>
-<button id="clearBtn" style="background:#666; font-size:12px; width:auto; display:block; margin: 0 auto 20px;">リセット</button>
+<h3>日程確定(アポ確定)</h3>
+<hr>
+<button type="button" id="clearBtn">クリア</button><br>
 
-<div id="box-1" class="step-box step-active">
-    <span class="step-num">STEP 01</span>
-    <span class="title title-blue">１．お客様のLINE名を入力</span>
-    <textarea id="lineName" rows="2" placeholder="LINE名を入力してください"></textarea>
-</div>
+<textarea id="lineName" rows="2" cols="25" placeholder="LINE名" style="background-color:#fff9c4;"></textarea>
+<button type="button" id="lineNameCopyBtn">コピー</button><br>
 
-<div id="box-2" class="step-box step-disabled">
-    <span class="step-num">STEP 02</span>
-    <span class="title title-blue">２．面談日時の入力と流入経路</span>
-    <textarea id="meetingDate" rows="2" placeholder="面談日時を入力"></textarea>
-    <div id="entry-container">読み込み中...</div>
-</div>
+<textarea id="meetingDate" rows="2" cols="25" placeholder="面談日時" style="background-color:#e8f5e9;"></textarea><br>
 
-<div id="box-3" class="step-box step-disabled">
-    <span class="step-num">STEP 03</span>
-    <span class="title title-blue">３．クローザー日程記入・担当者選択</span>
-    <div id="closer-list">読み込み中...</div>
-    <label class="check-area">
-        <input type="checkbox" id="check-closer-sheet"> クローザー日程表に記入しました
-    </label>
-</div>
+<p style="font-size:12px; font-weight:bold;">流入経路：</p>
+<div id="entryContainer"></div>
 
-<div id="box-4" class="step-box step-disabled">
-    <span class="step-num">STEP 04</span>
-    <span class="title title-blue">４．Googleカレンダーに入力</span>
-    <textarea id="calendarTitle" rows="2" readonly></textarea>
-    <label class="check-area"><input type="checkbox" id="check-cal-input"> カレンダー入力しました</label>
-    <label class="check-area"><input type="checkbox" id="check-mail-sent"> メールを送信しました</label>
-</div>
+<hr>
 
-<div id="box-5" class="step-box step-disabled">
-    <span class="step-num">STEP 05</span>
-    <span class="title title-blue">５．個別相談ステータス(広告)への記入</span>
-    <label class="check-area"><input type="checkbox" id="check-ad-sheet"> 記入しました</label>
-</div>
+<section style="font-size:12px; line-height:1.6;">
+  <p style="font-weight:bold;">各種入力</p>
+  <ul>
+    <li>
+      <span style="color:blue; font-weight:bold; font-size:18px;">クローザー日程</span><br>
+      <span style="color:gray;">担当クローザー：</span><br>
+      <div id="closerContainer"></div>
+      <input type="hidden" id="hiddenZoomUrl">
+    </li>
+    <li>
+      <span style="color:blue; font-weight:bold; font-size:18px;">Googleカレンダー</span><br>
+      <textarea id="calendarTitle" rows="3" cols="30"></textarea>
+      <button type="button" id="calendarCopyBtn">コピー</button>
+    </li>
+  </ul>
 
-<div id="box-utage-parent" class="step-disabled">
-    <h3 style="text-align:center; color:#b71c1c;">UTAGE操作セクション</h3>
-    <div id="box-u1" class="step-box">
-        <span class="title title-red">１．ラベルを貼る</span>
-        <span id="closer-label-display" class="badge">（クローザー）担当者名</span>
-        <label class="check-area"><input type="checkbox" id="check-label"> ラベルを貼りました</label>
-    </div>
-    </div>
+  <hr>
+
+  <p style="font-weight:bold;">UTAGE画面</p>
+  <ul>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;"> Zoomリンク送信</span><br>
+      <textarea id="zoomMessageArea" rows="18" cols="30"></textarea>
+      <button id="zoomCopyBtn">コピー</button>
+    </li>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;">雑談スタート</span><br>
+      <textarea id="chatQuestionArea" rows="5" cols="30"></textarea>
+      <button id="chatCopyBtn">コピー</button>
+    </li>
+  </ul>
+</section>
 
 <script type="module">
-    import { initCloserSelect } from './closer-select.js';
-    import { initEntrySelect } from './entry-select.js';
+import { initCloserSelect } from './closer-select.js';
+import { initEntrySelect } from './entry-select.js';
 
-    const $ = id => document.getElementById(id);
-    const getSelect = containerId => {
-        const container = $(containerId);
-        return container ? container.querySelector('select') : null;
-    };
+// --- 要素の取得 ---
+const el = {
+  lineName:      document.getElementById("lineName"),
+  meetingDate:   document.getElementById("meetingDate"),
+  entryBox:      document.getElementById("entryContainer"),
+  closerBox:     document.getElementById("closerContainer"),
+  hiddenZoom:    document.getElementById("hiddenZoomUrl"),
+  calendarTitle: document.getElementById("calendarTitle"),
+  zoomMessage:   document.getElementById("zoomMessageArea"),
+  chatQuestion:  document.getElementById("chatQuestionArea")
+};
 
-    function refreshFlow() {
-        try {
-            const name = $('lineName').value.trim();
-            const date = $('meetingDate').value.trim();
-            
-            // 安全にセレクトボックスを取得（存在しない場合は空文字にする）
-            const entrySel = getSelect('entry-container');
-            const entry = entrySel ? entrySel.value : "";
-            
-            const staffSel = getSelect('closer-list');
-            const zoomLink = staffSel ? staffSel.value : "";
-            const staffName = (staffSel && staffSel.selectedIndex > 0) ? staffSel.options[staffSel.selectedIndex].text.split('（')[0] : "";
+// --- ロジック ---
 
-            // 自動反映
-            $('calendarTitle').value = (name && entry) ? `${entry}${name}` : "";
-            $('closer-label-display').textContent = staffName ? `「（クローザー）${staffName}」` : "（クローザー）担当者名";
+// 全リセット
+const resetFields = () => {
+  const entrySelect  = el.entryBox.querySelector('select');
+  const closerSelect = el.closerBox.querySelector('select');
 
-            // 進行制御（エラーを防ぐため条件分岐を丁寧に）
-            toggleStep('box-1', 'box-2', name !== "");
-            toggleStep('box-2', 'box-3', name !== "" && date !== "" && entry !== "");
-            toggleStep('box-3', 'box-4', staffName !== "" && $('check-closer-sheet').checked);
-            toggleStep('box-4', 'box-5', $('check-cal-input').checked && $('check-mail-sent').checked);
-            
-            if($('check-ad-sheet').checked) {
-                $('box-5').className = 'step-box step-done';
-                $('box-utage-parent').classList.remove('step-disabled');
-            }
-        } catch (e) {
-            console.error("更新エラー:", e);
-        }
-    }
+  if (entrySelect)  entrySelect.value = "";
+  if (closerSelect) {
+    closerSelect.value = "";
+    closerSelect.style.backgroundColor = "#ffffff";
+  }
 
-    function toggleStep(currentId, nextId, condition) {
-        const cur = $(currentId);
-        const nxt = $(nextId);
-        if (!cur || !nxt) return;
+  el.calendarTitle.value = "";
+  el.hiddenZoom.value    = "";
+  el.zoomMessage.value   = "";
+  el.chatQuestion.value  = "";
+  el.meetingDate.value   = "";
+};
 
-        if (condition) {
-            cur.className = 'step-box step-done';
-            nxt.classList.remove('step-disabled');
-            nxt.classList.add('step-active');
-        } else {
-            nxt.classList.add('step-disabled');
-            nxt.classList.remove('step-active');
-        }
-    }
+// カレンダータイトル更新
+const refreshCalendarTitle = () => {
+  const name = el.lineName.value.trim();
+  const entrySelect = el.entryBox.querySelector('select');
+  const media = entrySelect?.value || "";
 
-    // 初期化（プルダウン生成後にイベントを紐付け）
-    window.addEventListener('DOMContentLoaded', () => {
-        initEntrySelect('entry-container', refreshFlow);
-        initCloserSelect('closer-list', 'unused', refreshFlow);
+  el.calendarTitle.value = (name && media) ? `${media}${name}` : "";
+};
 
-        $('lineName').addEventListener('input', refreshFlow);
-        $('meetingDate').addEventListener('input', refreshFlow);
-        
-        // 全てのチェックボックスにイベントを付与
-        document.querySelectorAll('input[type="checkbox"]').forEach(chk => {
-            chk.addEventListener('change', refreshFlow);
-        });
-    });
+// Zoomメッセージ更新
+const refreshZoomMessage = () => {
+  if (!el.hiddenZoom.value) return;
 
-    $('clearBtn').onclick = () => location.reload();
+  if (!el.lineName.value || !el.meetingDate.value) {
+    alert("LINE名と面談日時は必須です");
+    resetFields();
+    return;
+  }
+
+  el.zoomMessage.value = `実施日：${el.meetingDate.value}\n\n${el.hiddenZoom.value}\n\n【無料プレゼントはこちら👇】\nhttps://forms.gle/i2XPWLVQE44iYc7b8`;
+};
+
+// --- イベント設定 ---
+
+// LINE名入力時
+el.lineName.oninput = () => {
+  resetFields();
+  el.chatQuestion.value = el.lineName.value ? `${el.lineName.value}さんはこれまで副業やったことありますか？` : "";
+};
+
+// クリアボタン
+document.getElementById("clearBtn").onclick = () => {
+  el.lineName.value = "";
+  resetFields();
+};
+
+// コピー機能一括
+const setupCopy = (btnId, targetEl) => {
+  document.getElementById(btnId).onclick = () => {
+    if (!targetEl.value) return;
+    targetEl.select();
+    document.execCommand("copy");
+  };
+};
+setupCopy("lineNameCopyBtn", el.lineName);
+setupCopy("calendarCopyBtn", el.calendarTitle);
+setupCopy("zoomCopyBtn",     el.zoomMessage);
+setupCopy("chatCopyBtn",     el.chatQuestion);
+
+// --- 外部コンポーネント初期化 ---
+// 呼び出しを整理：(挿入先ID, [連動InputID], コールバック)
+initEntrySelect(el.entryBox.id, refreshCalendarTitle);
+initCloserSelect(el.closerBox.id, el.hiddenZoom.id, refreshZoomMessage);
+
 </script>
 </body>
 </html>
