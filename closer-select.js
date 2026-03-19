@@ -3,13 +3,13 @@ export async function initCloserSelect(targetId, inputId, onChangeCallback) {
     const container = document.getElementById(targetId);
     const urlInput = document.getElementById(inputId);
 
-    const rankOrder = ["トップセールス", "2軍", "3軍", "研修生", "審査落ち"];
+    const rankOrder = ["トップセールス", "2軍", "3軍", "育成枠", "審査落のみ"];
     const colors = {
         "トップセールス": "#F4CCCC",
         "2軍": "#CFE2F3",
         "3軍": "#FFF2CC",
-        "研修生": "#D9EAD3",
-        "審査落ち": "#B4A7D6"
+        "育成枠": "#D9EAD3",
+        "審査落のみ": "#B4A7D6"
     };
 
     try {
