@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>日程確定(アポ確定)</title>
+<meta charset="UTF-8">
+<title>日程確定(アポ確定)</title>
 </head>
 <body>
 
@@ -11,44 +11,83 @@
 <button type="button" id="clearBtn">クリア</button><br>
 
 <textarea id="lineName" rows="2" cols="25" placeholder="LINE名" style="background-color:#fff9c4;"></textarea>
-<button type="button" id="lineNameCopyBtn">コピー</button><br>
+<button type="button" id="lineNameCopyBtn">コピー</button>
+<br>
 
-<textarea id="meetingDate" rows="2" cols="25" placeholder="面談日時" style="background-color:#e8f5e9;"></textarea><br>
+<textarea id="meetingDate" rows="2" cols="25" placeholder="面談日時" style="background-color:#e8f5e9;"></textarea>
+<br>
 
 <p style="font-size:12px; font-weight:bold;">流入経路：</p>
 <div id="entryContainer"></div>
-
+<br><br>
 <hr>
 
 <section style="font-size:12px; line-height:1.6;">
   <p style="font-weight:bold;">各種入力</p>
   <ul>
     <li>
-      <span style="color:blue; font-weight:bold; font-size:18px;">クローザー日程</span><br>
-      <span style="color:gray;">担当クローザー：</span><br>
-      <div id="closerContainer"></div>
-      <input type="hidden" id="hiddenZoomUrl">
+        <span style="color:blue; font-weight:bold; font-size:18px;">クローザー日程</span><br>
+        <span style="color:gray;">担当クローザー：</span><br>
+          <div id="closerContainer"></div>
+          <input type="hidden" id="hiddenZoomUrl">
+          <br><br>
     </li>
     <li>
-      <span style="color:blue; font-weight:bold; font-size:18px;">Googleカレンダー</span><br>
-      <textarea id="calendarTitle" rows="3" cols="30"></textarea>
-      <button type="button" id="calendarCopyBtn">コピー</button>
+        <span style="color:blue; font-weight:bold; font-size:18px;">Googleカレンダー</span><br>
+        <span style="color:gray;">カレンダータイトル：</span><br>
+          <textarea id="calendarTitle" rows="3" cols="30" placeholder=""></textarea>
+          <button type="button" id="calendarCopyBtn">コピー</button>
+          <br><br>
+          <style>
+          .remind-simple{ animation: fadeblink-simple 1s infinite; }
+          @keyframes fadeblink-simple{ 0% {opacity:1;} 50% {opacity:0.2;} 100% {opacity:1;} }
+          </style>
+          <span class="remind-simple" style="background:#e0f0ff; color:#004a99; font-weight:bold; padding:6px 12px; border-radius:4px;">
+          メール送信 忘れずに！
+          </span>
+          <br><br>
+    </li>
+    <li>
+        <span style="color:blue; font-weight:bold; font-size:18px;">個別相談ステータス(広告)</span><br>
+        <span style="color:gray;">※再調整の場合、既存レコードを更新</span><br>
+        <span style="color:gray;">①担当クローザー<br>②ステータス（「日程確定(実施待ち)」にする）</span><br>
+        <span style="color:gray;">③面談予定日<br>④日程調整の担当者名</span>
     </li>
   </ul>
-
+  <br>
   <hr>
 
   <p style="font-weight:bold;">UTAGE画面</p>
   <ul>
     <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;">ラベルを貼る</span><br>
+      <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「⭕日程確定（普通導線）」</span><br>
+      <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「（クローザー）担当者名」</span><br>
+      <br>
+    </li>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;">【最新版】日程確定直後送付</span><br>
+      <span style="color:gray;">LINEテンプレート送信から選択、送信</span><br>
+      <br>
+    </li>
+    <li>
       <span style="color:#B22222; font-weight:bold; font-size:18px;"> Zoomリンク送信</span><br>
-      <textarea id="zoomMessageArea" rows="18" cols="30"></textarea>
+      <span style="color:gray;">※再調整の場合、無料プレゼントの部分を消す</span><br>
+      <textarea id="zoomOutput" rows="18" cols="30"></textarea>
       <button id="zoomCopyBtn">コピー</button>
+      <br><br>
     </li>
     <li>
       <span style="color:#B22222; font-weight:bold; font-size:18px;">雑談スタート</span><br>
-      <textarea id="chatQuestionArea" rows="5" cols="30"></textarea>
+      <span style="color:gray;">呼び方はフルネームを避け、苗字または名前に寄せる</span><br>
+      <span style="color:gray;">例）山田太郎 →『山田さん』または『太郎さん』</span><br>
+      <textarea id="chatQuestion" rows="5" cols="30"></textarea>
       <button id="chatCopyBtn">コピー</button>
+      <br><br>
+    </li>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;">メインアカウントにラベルを貼る</span><br>
+      <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「サポート申込済」</span><br>
     </li>
   </ul>
 </section>
@@ -57,91 +96,82 @@
 import { initCloserSelect } from './closer-select.js';
 import { initEntrySelect } from './entry-select.js';
 
-// --- 要素の取得 ---
-const el = {
+// --- 1. 要素の定義 ---
+const ui = {
   lineName:      document.getElementById("lineName"),
   meetingDate:   document.getElementById("meetingDate"),
   entryBox:      document.getElementById("entryContainer"),
   closerBox:     document.getElementById("closerContainer"),
   hiddenZoom:    document.getElementById("hiddenZoomUrl"),
   calendarTitle: document.getElementById("calendarTitle"),
-  zoomMessage:   document.getElementById("zoomMessageArea"),
-  chatQuestion:  document.getElementById("chatQuestionArea")
+  zoomOutput:    document.getElementById("zoomOutput"),
+  chatQuestion:  document.getElementById("chatQuestion")
 };
 
-// --- ロジック ---
+// --- 2. 更新・リセットロジック ---
 
-// 全リセット
-const resetFields = () => {
-  const entrySelect  = el.entryBox.querySelector('select');
-  const closerSelect = el.closerBox.querySelector('select');
+const resetAll = () => {
+  const entrySelect  = ui.entryBox.querySelector('select');
+  const closerSelect = ui.closerBox.querySelector('select');
 
   if (entrySelect)  entrySelect.value = "";
   if (closerSelect) {
     closerSelect.value = "";
     closerSelect.style.backgroundColor = "#ffffff";
   }
-
-  el.calendarTitle.value = "";
-  el.hiddenZoom.value    = "";
-  el.zoomMessage.value   = "";
-  el.chatQuestion.value  = "";
-  el.meetingDate.value   = "";
+  ui.calendarTitle.value = "";
+  ui.hiddenZoom.value    = "";
+  ui.zoomOutput.value    = "";
+  ui.chatQuestion.value  = "";
+  ui.meetingDate.value   = "";
 };
 
-// カレンダータイトル更新
-const refreshCalendarTitle = () => {
-  const name = el.lineName.value.trim();
-  const entrySelect = el.entryBox.querySelector('select');
+const updateCalendarTitle = () => {
+  const entrySelect = ui.entryBox.querySelector('select');
   const media = entrySelect?.value || "";
-
-  el.calendarTitle.value = (name && media) ? `${media}${name}` : "";
+  const name  = ui.lineName.value.trim();
+  ui.calendarTitle.value = (name && media) ? `${media}${name}` : "";
 };
 
-// Zoomメッセージ更新
-const refreshZoomMessage = () => {
-  if (!el.hiddenZoom.value) return;
-
-  if (!el.lineName.value || !el.meetingDate.value) {
+const updateZoomMessage = () => {
+  if (!ui.hiddenZoom.value) return;
+  if (!ui.lineName.value || !ui.meetingDate.value) {
     alert("LINE名と面談日時は必須です");
-    resetFields();
+    resetAll();
     return;
   }
-
-  el.zoomMessage.value = `実施日：${el.meetingDate.value}\n\n${el.hiddenZoom.value}\n\n【無料プレゼントはこちら👇】\nhttps://forms.gle/i2XPWLVQE44iYc7b8`;
+  ui.zoomOutput.value = `実施日：${ui.meetingDate.value}\n\n${ui.hiddenZoom.value}\n\n【無料プレゼントはこちら👇】\nhttps://forms.gle/i2XPWLVQE44iYc7b8`;
 };
 
-// --- イベント設定 ---
+// --- 3. イベントリスナー ---
 
-// LINE名入力時
-el.lineName.oninput = () => {
-  resetFields();
-  el.chatQuestion.value = el.lineName.value ? `${el.lineName.value}さんはこれまで副業やったことありますか？` : "";
+ui.lineName.oninput = () => {
+  resetAll();
+  ui.chatQuestion.value = ui.lineName.value ? `${ui.lineName.value}さんはこれまで副業やったことありますか？` : "";
 };
 
-// クリアボタン
 document.getElementById("clearBtn").onclick = () => {
-  el.lineName.value = "";
-  resetFields();
+  ui.lineName.value = "";
+  resetAll();
 };
 
-// コピー機能一括
-const setupCopy = (btnId, targetEl) => {
+// コピー処理の共通化
+const bindCopy = (btnId, targetEl) => {
   document.getElementById(btnId).onclick = () => {
     if (!targetEl.value) return;
     targetEl.select();
     document.execCommand("copy");
   };
 };
-setupCopy("lineNameCopyBtn", el.lineName);
-setupCopy("calendarCopyBtn", el.calendarTitle);
-setupCopy("zoomCopyBtn",     el.zoomMessage);
-setupCopy("chatCopyBtn",     el.chatQuestion);
 
-// --- 外部コンポーネント初期化 ---
-// 呼び出しを整理：(挿入先ID, [連動InputID], コールバック)
-initEntrySelect(el.entryBox.id, refreshCalendarTitle);
-initCloserSelect(el.closerBox.id, el.hiddenZoom.id, refreshZoomMessage);
+bindCopy("lineNameCopyBtn", ui.lineName);
+bindCopy("calendarCopyBtn", ui.calendarTitle);
+bindCopy("zoomCopyBtn",     ui.zoomOutput);
+bindCopy("chatCopyBtn",     ui.chatQuestion);
+
+// --- 4. 外部JS呼び出し ---
+initEntrySelect(ui.entryBox.id, updateCalendarTitle);
+initCloserSelect(ui.closerBox.id, ui.hiddenZoom.id, updateZoomMessage);
 
 </script>
 </body>
