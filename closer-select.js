@@ -1,5 +1,5 @@
 export async function initCloserSelect(targetId, inputId, onChangeCallback) {
-    const API_URL = "https://script.google.com/macros/s/AKfycbxb282oIXg6UrpqJ1MM2txXEriwJnq8nHiUFqZTpyoI8FJ4zOHFjrQKvqnDhteA9qTl/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbySHVscjhTYWKf8bLJUGIMJ7AArbsp8cS8wl0O8FyYjYoO2mRzMO8jZhcc_cmhDvYfIhA/exec";
     const container = document.getElementById(targetId);
     const urlInput = document.getElementById(inputId);
 
