@@ -6,8 +6,8 @@
 <style>
   /* プルダウン（セレクトボックス）を太く、押しやすく調整 */
   select { 
-    padding: 8px 4px; /* 上下をさらに太く */
-    font-size: 14px;  /* 文字も少し大きくして視認性を向上 */
+    padding: 8px 4px; 
+    font-size: 14px; 
     vertical-align: middle; 
   }
   .remind-simple{ animation: fadeblink-simple 1s infinite; }
@@ -18,7 +18,7 @@
 
 <h3>日程確定(アポ確定)</h3>
 <hr>
-<button type="button" id="clearBtn">初期化</button><br><br>
+<button type="button" id="clearBtn">初期化</button><br>
 
 <textarea id="lineName" rows="2" cols="25" placeholder="LINE名" style="background-color:#fff9c4;"></textarea>
 <button type="button" id="lineNameCopyBtn">コピー</button>
@@ -27,6 +27,7 @@
 <textarea id="meetingDate" rows="2" cols="25" placeholder="面談日時" style="background-color:#e8f5e9;"></textarea>
 <br>
 
+<p style="font-size:12px; font-weight:bold;">流入経路：</p>
 <div id="entryContainer"></div>
 <br>
 <hr>
@@ -176,8 +177,27 @@ bindCopy("calendarCopyBtn", ui.calendarTitle);
 bindCopy("zoomCopyBtn",     ui.zoomOutput);
 bindCopy("chatCopyBtn",     ui.chatQuestion);
 
+// --- 外部JS呼び出し ---
 initEntrySelect(ui.entryBox.id, updateCalendarTitle);
-initCloserSelect(ui.closerBox.id, ui.hiddenZoom.id, updateZoomMessage);
+
+// クローザー選択の初期化に「入力必須チェック」を組み込む
+initCloserSelect(ui.closerBox.id, ui.hiddenZoom.id, () => {
+  const name = ui.lineName.value.trim();
+  const date = ui.meetingDate.value.trim();
+  const entrySelect = ui.entryBox.querySelector('select');
+  const media = entrySelect?.value || "";
+  const closerSelect = ui.closerBox.querySelector('select');
+
+  // LINE名、面談日時、流入経路のどれかが空の場合
+  if (!name || !date || !media) {
+    alert("「LINE名」「面談日時」「流入経路」をすべて入力してください。");
+    if (closerSelect) {
+      closerSelect.value = ""; // 選択を強制リセット
+    }
+    return;
+  }
+  updateZoomMessage();
+});
 
 </script>
 </body>
