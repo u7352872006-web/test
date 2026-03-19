@@ -4,103 +4,93 @@
 <meta charset="UTF-8">
 <title>日程確定(アポ確定)</title>
 <style>
-  body { font-family: sans-serif; padding: 20px; color: #333; max-width: 500px; margin: auto; }
+  body { font-family: sans-serif; padding: 10px; color: #333; font-size: 13px; line-height: 1.2; }
   .disabled-section { opacity: 0.2; pointer-events: none; filter: grayscale(100%); transition: 0.3s; }
-  .section-box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #fff; }
-  .check-item { margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-radius: 5px; list-style: none; }
-  .check-label { font-weight: bold; cursor: pointer; font-size: 16px; }
-  input[type="checkbox"] { transform: scale(1.6); margin-right: 12px; cursor: pointer; }
+  .section-box { border: 1px solid #ccc; padding: 8px; margin-bottom: 10px; border-radius: 6px; background: #fff; width: 380px; }
+  .check-item { margin-bottom: 5px; padding: 5px; background: #f9f9f9; border-radius: 4px; list-style: none; border: 1px solid #eee; }
+  .check-label { font-weight: bold; cursor: pointer; font-size: 14px; }
+  input[type="checkbox"] { transform: scale(1.2); margin-right: 8px; cursor: pointer; vertical-align: middle; }
   
   #finishMsg { 
-    display: none; text-align: center; background: #ffff00; padding: 30px; 
-    font-size: 24px; font-weight: bold; border: 5px dashed #ff0000; margin-top: 20px; 
+    display: none; text-align: center; background: #ffff00; padding: 15px; 
+    font-size: 18px; font-weight: bold; border: 3px dashed #ff0000; margin-top: 10px; width: 380px;
   }
 
-  textarea { width: 100%; box-sizing: border-box; margin-top: 5px; border: 1px solid #bbb; border-radius: 4px; padding: 8px; }
-  button { cursor: pointer; padding: 8px 12px; margin-top: 5px; }
+  h3 { margin: 0 0 5px 0; font-size: 16px; }
+  textarea { margin-top: 2px; border: 1px solid #bbb; border-radius: 3px; padding: 2px; font-size: 12px; }
+  button { cursor: pointer; padding: 2px 8px; font-size: 11px; vertical-align: middle; }
   .copy-ok { background: #c8e6c9 !important; border: 1px solid #4caf50; }
+  p { margin: 5px 0; }
+  hr { margin: 10px 0; border: 0; border-top: 1px solid #eee; }
 </style>
 </head>
 <body>
 
 <h3>日程確定(アポ確定)</h3>
+<button type="button" id="clearBtn">すべてリセット</button>
 <hr>
-<button type="button" id="clearBtn">すべてクリア（最初から）</button><br><br>
 
 <div class="section-box" style="background:#fffde7;">
-  <p style="font-weight:bold; color:#d32f2f; margin-top:0;">1. 基本情報を入力</p>
+  <p style="font-weight:bold; color:#d32f2f; margin:0;">1. 基本情報</p>
+  <textarea id="lineName" rows="2" cols="25" placeholder="LINE名" style="background-color:#fff9c4;"></textarea>
+  <button type="button" id="lineNameCopyBtn">コピー</button><br>
   
-  <label style="font-size:12px;">LINE名</label><br>
-  <textarea id="lineName" rows="1" placeholder="お名前を入力"></textarea>
-  <button type="button" id="lineNameCopyBtn">名前をコピー</button><br><br>
+  <textarea id="meetingDate" rows="2" cols="25" placeholder="面談日時" style="background-color:#e8f5e9;"></textarea><br>
   
-  <label style="font-size:12px;">面談日時</label><br>
-  <textarea id="meetingDate" rows="1" placeholder="例：3月10日 15:00〜"></textarea><br><br>
-  
-  <p style="font-size:12px; font-weight:bold; margin: 0 0 5px 0;">流入経路：</p>
-  <div id="entryContainer"></div>
+  <div style="display:flex; align-items:center; margin-top:5px;">
+    <span style="font-weight:bold; margin-right:5px;">経路:</span>
+    <div id="entryContainer"></div>
+  </div>
 </div>
 
 <div id="step1" class="section-box disabled-section">
-  <p style="font-weight:bold; color:blue; margin-top:0;">2. 各種入力（終わったらチェック）</p>
-  <ul style="padding:0; margin:0;">
+  <p style="font-weight:bold; color:blue; margin:0;">2. 各種入力（チェックで次へ）</p>
+  <ul style="padding:0; margin:5px 0;">
     <li class="check-item">
-      <input type="checkbox" id="chk1"><label for="chk1" class="check-label">クローザー日程に記入しましたか？</label><br>
-      <div style="margin-top:10px; padding-left:30px;">
-        <span style="color:gray; font-size:12px;">担当クローザー：</span>
-        <div id="closerContainer"></div>
-        <input type="hidden" id="hiddenZoomUrl">
+      <input type="checkbox" id="chk1"><label for="chk1" class="check-label">クローザー日程記入</label>
+      <div id="closerContainer" style="margin:3px 0 0 25px;"></div>
+      <input type="hidden" id="hiddenZoomUrl">
+    </li>
+    <li class="check-item">
+      <input type="checkbox" id="chk2"><label for="chk2" class="check-label">カレンダー登録</label>
+      <div style="margin-left:25px;">
+        <textarea id="calendarTitle" rows="2" cols="30" placeholder="タイトル"></textarea>
+        <button type="button" id="calendarCopyBtn">コピー</button><br>
+        <input type="checkbox" id="chk2_sub"><label for="chk2_sub" style="color:red; font-size:11px;">メール送信OK</label>
       </div>
     </li>
-
     <li class="check-item">
-      <input type="checkbox" id="chk2"><label for="chk2" class="check-label">Googleカレンダーに予定を入れましたか？</label><br>
-      <div style="margin-top:10px; padding-left:30px;">
-        <textarea id="calendarTitle" rows="1" placeholder="タイトル"></textarea>
-        <button type="button" id="calendarCopyBtn">コピー</button><br><br>
-        <input type="checkbox" id="chk2_sub"><label for="chk2_sub" style="color:red; font-weight:bold; cursor:pointer;">➡ メールを送信しましたか？</label>
-      </div>
-    </li>
-
-    <li class="check-item">
-      <input type="checkbox" id="chk3"><label for="chk3" class="check-label">個別相談ステータスを記入しましたか？</label><br>
-      <small style="color:gray; margin-left:30px;">※再調整は名前検索して上書き</small>
+      <input type="checkbox" id="chk3"><label for="chk3" class="check-label">個別相談ステータス記入</label>
     </li>
   </ul>
 </div>
 
 <div id="step2" class="section-box disabled-section">
-  <p style="font-weight:bold; color:#B22222; margin-top:0;">3. UTAGE画面の操作</p>
-  <ul style="padding:0; margin:0;">
-    <li class="check-item">
-      <input type="checkbox" id="chk4"><label for="chk4" class="check-label">ラベルを貼りましたか？</label>
+  <p style="font-weight:bold; color:#B22222; margin:0;">3. UTAGE画面操作</p>
+  <ul style="padding:0; margin:5px 0;">
+    <li class="check-item" style="display:flex; justify-content:space-between; align-items:center;">
+      <label class="check-label"><input type="checkbox" id="chk4">ラベル貼付</label>
+      <label class="check-label"><input type="checkbox" id="chk5">直後送付</label>
     </li>
-
     <li class="check-item">
-      <input type="checkbox" id="chk5"><label for="chk5" class="check-label">日程確定直後送付を送信しましたか？</label>
-    </li>
-
-    <li class="check-item">
-      <span class="check-label">Zoomリンク送信</span><br>
-      <textarea id="zoomOutput" rows="4" readonly style="background:#eee;"></textarea><br>
-      <button id="zoomCopyBtn">コピーして次へ</button>
+      <span class="check-label">Zoomリンク</span>
+      <button id="zoomCopyBtn">コピー</button>
+      <textarea id="zoomOutput" rows="3" cols="33" readonly style="background:#eee; display:block;"></textarea>
       <input type="hidden" id="zoomDone">
     </li>
-
     <li class="check-item">
-      <span class="check-label">雑談スタート</span><br>
-      <textarea id="chatQuestion" rows="2" readonly style="background:#eee;"></textarea><br>
-      <button id="chatCopyBtn">コピーして次へ</button>
+      <span class="check-label">雑談</span>
+      <button id="chatCopyBtn">コピー</button>
+      <textarea id="chatQuestion" rows="2" cols="33" readonly style="background:#eee; display:block;"></textarea>
       <input type="hidden" id="chatDone">
     </li>
-
     <li class="check-item">
-      <input type="checkbox" id="chk6"><label for="chk6" class="check-label">メインアカウントにラベルを貼りましたか？</label>
+      <input type="checkbox" id="chk6"><label for="chk6" class="check-label">メイン垢ラベル貼付</label>
     </li>
   </ul>
 </div>
 
-<div id="finishMsg">✨ お疲れ様でした！すべて完了です ✨</div>
+<div id="finishMsg">✨ 完了！ ✨</div>
 
 <script type="module">
 import { initCloserSelect } from './closer-select.js';
@@ -123,55 +113,43 @@ const ui = {
   checks: ["chk1","chk2","chk2_sub","chk3","chk4","chk5","chk6"].map(id => document.getElementById(id))
 };
 
-// 状態チェック（ガードレール）
 const refresh = () => {
   const entrySelect = ui.entryBox.querySelector('select');
-  const isCoreOk = ui.lineName.value.trim() !== "" && 
-                   ui.meetingDate.value.trim() !== "" && 
-                   (entrySelect && entrySelect.value !== "");
-  
+  const isCoreOk = ui.lineName.value.trim() !== "" && ui.meetingDate.value.trim() !== "" && (entrySelect && entrySelect.value !== "");
   ui.step1.classList.toggle("disabled-section", !isCoreOk);
-
   const isStep1Ok = ["chk1","chk2","chk2_sub","chk3"].every(id => document.getElementById(id).checked);
   ui.step2.classList.toggle("disabled-section", !(isCoreOk && isStep1Ok));
-
-  const isStep2Ok = ["chk4","chk5","chk6"].every(id => document.getElementById(id).checked) && 
-                    ui.zoomDone.value === "done" && 
-                    ui.chatDone.value === "done";
-  
+  const isStep2Ok = ["chk4","chk5","chk6"].every(id => document.getElementById(id).checked) && ui.zoomDone.value === "done" && ui.chatDone.value === "done";
   ui.finish.style.display = (isCoreOk && isStep1Ok && isStep2Ok) ? "block" : "none";
 };
 
-// 入力イベント：LINE名が変わったら「チェック」だけ外す（入力は邪魔しない）
+// 【改善】LINE名が変わっても、日時や経路は消さない
 ui.lineName.oninput = () => {
-  // チェックボックスと完了フラグだけをリセット
+  // チェックボックスとコピー済フラグだけリセット（ガードレールを掛け直すため）
   ui.checks.forEach(c => c.checked = false);
-  ui.zoomDone.value = "";
-  ui.chatDone.value = "";
-  
-  // コピーボタンの色も戻す
+  ui.zoomDone.value = ""; ui.chatDone.value = "";
   document.getElementById("zoomCopyBtn").classList.remove("copy-ok");
   document.getElementById("chatCopyBtn").classList.remove("copy-ok");
-
-  // 雑談テキスト生成
+  
+  // 雑談の質問だけ名前入りに更新
   ui.chatQuestion.value = ui.lineName.value ? `${ui.lineName.value.trim()}さんはこれまで副業やったことありますか？` : "";
+  
+  // カレンダータイトルも名前が入っていれば更新
+  const media = ui.entryBox.querySelector('select')?.value || "";
+  ui.calendarTitle.value = (ui.lineName.value && media) ? `${media}${ui.lineName.value.trim()}` : "";
+
   refresh();
 };
 
 ui.meetingDate.oninput = refresh;
 ui.checks.forEach(c => c.onchange = refresh);
 
-// コピー処理
 const bindCopy = (btnId, targetEl, flagEl) => {
   document.getElementById(btnId).onclick = () => {
     if (!targetEl.value) return;
     targetEl.select();
     document.execCommand("copy");
-    if(flagEl) { 
-        flagEl.value = "done"; 
-        document.getElementById(btnId).classList.add("copy-ok");
-        refresh(); 
-    }
+    if(flagEl) { flagEl.value = "done"; document.getElementById(btnId).classList.add("copy-ok"); refresh(); }
   };
 };
 
@@ -180,21 +158,16 @@ bindCopy("calendarCopyBtn", ui.calendarTitle);
 bindCopy("zoomCopyBtn", ui.zoomOutput, ui.zoomDone);
 bindCopy("chatCopyBtn", ui.chatQuestion, ui.chatDone);
 
-// クリアボタン
+// 「すべてリセット」ボタンだけが全部を消す
 document.getElementById("clearBtn").onclick = () => {
-  ui.lineName.value = "";
-  ui.meetingDate.value = "";
-  ui.calendarTitle.value = "";
-  ui.zoomOutput.value = "";
-  ui.zoomDone.value = "";
-  ui.chatDone.value = "";
+  ui.lineName.value = ""; ui.meetingDate.value = ""; ui.calendarTitle.value = ""; ui.zoomOutput.value = "";
+  ui.zoomDone.value = ""; ui.chatDone.value = "";
   ui.checks.forEach(c => c.checked = false);
   const s1 = ui.entryBox.querySelector('select'); if(s1) s1.value = "";
   const s2 = ui.closerBox.querySelector('select'); if(s2) { s2.value = ""; s2.style.backgroundColor = "#fff"; }
   refresh();
 };
 
-// 外部JS連携
 initEntrySelect(ui.entryBox.id, () => {
   const media = ui.entryBox.querySelector('select')?.value || "";
   ui.calendarTitle.value = (ui.lineName.value && media) ? `${media}${ui.lineName.value.trim()}` : "";
@@ -205,7 +178,6 @@ initCloserSelect(ui.closerBox.id, ui.hiddenZoom.id, () => {
   ui.zoomOutput.value = `実施日：${ui.meetingDate.value}\n\n${ui.hiddenZoom.value}\n\n【無料プレゼントはこちら👇】\nhttps://forms.gle/i2XPWLVQE44iYc7b8`;
   refresh();
 });
-
 </script>
 </body>
 </html>
