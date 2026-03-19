@@ -4,8 +4,12 @@
 <meta charset="UTF-8">
 <title>日程確定(アポ確定)</title>
 <style>
-  /* プルダウンの縦幅と全体のバランスを調整 */
-  select { padding: 4px; vertical-align: middle; }
+  /* プルダウン（セレクトボックス）を太く、押しやすく調整 */
+  select { 
+    padding: 8px 4px; /* 上下をさらに太く */
+    font-size: 14px;  /* 文字も少し大きくして視認性を向上 */
+    vertical-align: middle; 
+  }
   .remind-simple{ animation: fadeblink-simple 1s infinite; }
   @keyframes fadeblink-simple{ 0% {opacity:1;} 50% {opacity:0.2;} 100% {opacity:1;} }
 </style>
@@ -136,7 +140,6 @@ const updateZoomMessage = () => {
   const name = ui.lineName.value.trim();
   const date = ui.meetingDate.value.trim();
   
-  // 必須項目（名前と日時）がなければZoomメッセージを空にする
   if (!name || !date || !ui.hiddenZoom.value) {
     ui.zoomOutput.value = "";
     return;
@@ -148,7 +151,7 @@ const updateZoomMessage = () => {
 // --- イベントリスナー ---
 
 ui.lineName.oninput = () => {
-  resetAll(); // 名前以外を初期化
+  resetAll(); 
   ui.chatQuestion.value = ui.lineName.value ? `${ui.lineName.value}さんはこれまで副業やったことありますか？` : "";
   updateCalendarTitle();
   updateZoomMessage();
