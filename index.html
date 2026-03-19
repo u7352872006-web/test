@@ -3,181 +3,179 @@
 <head>
 <meta charset="UTF-8">
 <title>日程確定(アポ確定)</title>
-<style>
-  body { font-family: sans-serif; padding: 10px; color: #333; font-size: 13px; line-height: 1.2; }
-  .disabled-section { opacity: 0.2; pointer-events: none; filter: grayscale(100%); transition: 0.3s; }
-  .section-box { border: 1px solid #ccc; padding: 8px; margin-bottom: 10px; border-radius: 6px; background: #fff; width: 380px; }
-  .check-item { margin-bottom: 5px; padding: 5px; background: #f9f9f9; border-radius: 4px; list-style: none; border: 1px solid #eee; }
-  .check-label { font-weight: bold; cursor: pointer; font-size: 14px; }
-  input[type="checkbox"] { transform: scale(1.2); margin-right: 8px; cursor: pointer; vertical-align: middle; }
-  
-  #finishMsg { 
-    display: none; text-align: center; background: #ffff00; padding: 15px; 
-    font-size: 18px; font-weight: bold; border: 3px dashed #ff0000; margin-top: 10px; width: 380px;
-  }
-
-  h3 { margin: 0 0 5px 0; font-size: 16px; }
-  textarea { margin-top: 2px; border: 1px solid #bbb; border-radius: 3px; padding: 2px; font-size: 12px; }
-  button { cursor: pointer; padding: 2px 8px; font-size: 11px; vertical-align: middle; }
-  .copy-ok { background: #c8e6c9 !important; border: 1px solid #4caf50; }
-  p { margin: 5px 0; }
-  hr { margin: 10px 0; border: 0; border-top: 1px solid #eee; }
-</style>
 </head>
 <body>
 
 <h3>日程確定(アポ確定)</h3>
-<button type="button" id="clearBtn">すべてリセット</button>
+<hr>
+<button type="button" id="clearBtn">初期化</button><br>
+
+<textarea id="lineName" rows="2" cols="25" placeholder="LINE名" style="background-color:#fff9c4;"></textarea>
+<button type="button" id="lineNameCopyBtn">コピー</button>
+<br>
+
+<textarea id="meetingDate" rows="2" cols="25" placeholder="面談日時" style="background-color:#e8f5e9;"></textarea>
+<br>
+
+<p style="font-size:12px; font-weight:bold;">流入経路：</p>
+<div id="entryContainer"></div>
+<br>
 <hr>
 
-<div class="section-box" style="background:#fffde7;">
-  <p style="font-weight:bold; color:#d32f2f; margin:0;">1. 基本情報</p>
-  <textarea id="lineName" rows="2" cols="25" placeholder="LINE名" style="background-color:#fff9c4;"></textarea>
-  <button type="button" id="lineNameCopyBtn">コピー</button><br>
-  
-  <textarea id="meetingDate" rows="2" cols="25" placeholder="面談日時" style="background-color:#e8f5e9;"></textarea><br>
-  
-  <div style="display:flex; align-items:center; margin-top:5px;">
-    <span style="font-weight:bold; margin-right:5px;">経路:</span>
-    <div id="entryContainer"></div>
-  </div>
-</div>
-
-<div id="step1" class="section-box disabled-section">
-  <p style="font-weight:bold; color:blue; margin:0;">2. 各種入力（チェックで次へ）</p>
-  <ul style="padding:0; margin:5px 0;">
-    <li class="check-item">
-      <input type="checkbox" id="chk1"><label for="chk1" class="check-label">クローザー日程記入</label>
-      <div id="closerContainer" style="margin:3px 0 0 25px;"></div>
-      <input type="hidden" id="hiddenZoomUrl">
+<section style="font-size:12px; line-height:1.6;">
+  <p style="font-weight:bold;">各種入力</p>
+  <ul>
+    <li>
+        <span style="color:blue; font-weight:bold; font-size:18px;">クローザー日程</span><br>
+        <span style="color:gray;">担当クローザー：</span><br>
+          <div id="closerContainer"></div>
+          <input type="hidden" id="hiddenZoomUrl">
+          <br><br>
     </li>
-    <li class="check-item">
-      <input type="checkbox" id="chk2"><label for="chk2" class="check-label">カレンダー登録</label>
-      <div style="margin-left:25px;">
-        <textarea id="calendarTitle" rows="2" cols="30" placeholder="タイトル"></textarea>
-        <button type="button" id="calendarCopyBtn">コピー</button><br>
-        <input type="checkbox" id="chk2_sub"><label for="chk2_sub" style="color:red; font-size:11px;">メール送信OK</label>
-      </div>
+    <li>
+        <span style="color:blue; font-weight:bold; font-size:18px;">Googleカレンダー</span><br>
+        <span style="color:gray;">カレンダータイトル：</span><br>
+          <textarea id="calendarTitle" rows="3" cols="30" placeholder=""></textarea>
+          <button type="button" id="calendarCopyBtn">コピー</button>
+          <br><br>
+          <style>
+          .remind-simple{ animation: fadeblink-simple 1s infinite; }
+          @keyframes fadeblink-simple{ 0% {opacity:1;} 50% {opacity:0.2;} 100% {opacity:1;} }
+          </style>
+          <span class="remind-simple" style="background:#e0f0ff; color:#004a99; font-weight:bold; padding:6px 12px; border-radius:4px;">
+          メール送信 忘れずに！
+          </span>
+          <br><br>
     </li>
-    <li class="check-item">
-      <input type="checkbox" id="chk3"><label for="chk3" class="check-label">個別相談ステータス記入</label>
+    <li>
+        <span style="color:blue; font-weight:bold; font-size:18px;">個別相談ステータス(広告)</span><br>
+        <span style="color:gray;">※再調整の場合は、顧客名を検索して、既にある行を更新</span><br>
     </li>
   </ul>
-</div>
+  <br>
+  <hr>
 
-<div id="step2" class="section-box disabled-section">
-  <p style="font-weight:bold; color:#B22222; margin:0;">3. UTAGE画面操作</p>
-  <ul style="padding:0; margin:5px 0;">
-    <li class="check-item" style="display:flex; justify-content:space-between; align-items:center;">
-      <label class="check-label"><input type="checkbox" id="chk4">ラベル貼付</label>
-      <label class="check-label"><input type="checkbox" id="chk5">直後送付</label>
+  <p style="font-weight:bold;">UTAGE画面</p>
+  <ul>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;">ラベルを貼る</span><br>
+      <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「⭕日程確定（普通導線）」</span><br>
+      <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「（クローザー）担当者名」</span><br>
+      <br>
     </li>
-    <li class="check-item">
-      <span class="check-label">Zoomリンク</span>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;">【最新版】日程確定直後送付</span><br>
+      <span style="color:gray;">LINEテンプレート送信から選択、送信</span><br>
+      <br>
+    </li>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;"> Zoomリンク送信</span><br>
+      <span style="color:gray;">※再調整の場合、無料プレゼントの部分を消す</span><br>
+      <textarea id="zoomOutput" rows="18" cols="30"></textarea>
       <button id="zoomCopyBtn">コピー</button>
-      <textarea id="zoomOutput" rows="3" cols="33" readonly style="background:#eee; display:block;"></textarea>
-      <input type="hidden" id="zoomDone">
+      <br><br>
     </li>
-    <li class="check-item">
-      <span class="check-label">雑談</span>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;">雑談スタート</span><br>
+      <span style="color:gray;">呼び方はフルネームを避け、苗字または名前に寄せる</span><br>
+      <span style="color:gray;">例）山田太郎 →『山田さん』または『太郎さん』</span><br>
+      <textarea id="chatQuestion" rows="5" cols="30"></textarea>
       <button id="chatCopyBtn">コピー</button>
-      <textarea id="chatQuestion" rows="2" cols="33" readonly style="background:#eee; display:block;"></textarea>
-      <input type="hidden" id="chatDone">
+      <br><br>
     </li>
-    <li class="check-item">
-      <input type="checkbox" id="chk6"><label for="chk6" class="check-label">メイン垢ラベル貼付</label>
+    <li>
+      <span style="color:#B22222; font-weight:bold; font-size:18px;">メインアカウントにラベルを貼る</span><br>
+      <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「サポート申込済」</span><br>
     </li>
   </ul>
-</div>
-
-<div id="finishMsg">✨ 完了！ ✨</div>
+</section>
 
 <script type="module">
 import { initCloserSelect } from './closer-select.js';
 import { initEntrySelect } from './entry-select.js';
 
 const ui = {
-  lineName: document.getElementById("lineName"),
-  meetingDate: document.getElementById("meetingDate"),
-  entryBox: document.getElementById("entryContainer"),
-  closerBox: document.getElementById("closerContainer"),
-  hiddenZoom: document.getElementById("hiddenZoomUrl"),
+  lineName:      document.getElementById("lineName"),
+  meetingDate:   document.getElementById("meetingDate"),
+  entryBox:      document.getElementById("entryContainer"),
+  closerBox:     document.getElementById("closerContainer"),
+  hiddenZoom:    document.getElementById("hiddenZoomUrl"),
   calendarTitle: document.getElementById("calendarTitle"),
-  zoomOutput: document.getElementById("zoomOutput"),
-  chatQuestion: document.getElementById("chatQuestion"),
-  step1: document.getElementById("step1"),
-  step2: document.getElementById("step2"),
-  finish: document.getElementById("finishMsg"),
-  zoomDone: document.getElementById("zoomDone"),
-  chatDone: document.getElementById("chatDone"),
-  checks: ["chk1","chk2","chk2_sub","chk3","chk4","chk5","chk6"].map(id => document.getElementById(id))
+  zoomOutput:    document.getElementById("zoomOutput"),
+  chatQuestion:  document.getElementById("chatQuestion")
 };
 
-const refresh = () => {
+// --- 初期化ロジック ---
+const resetAll = () => {
+  const entrySelect  = ui.entryBox.querySelector('select');
+  const closerSelect = ui.closerBox.querySelector('select');
+
+  if (entrySelect)  entrySelect.value = "";
+  if (closerSelect) {
+    closerSelect.value = "";
+    closerSelect.style.backgroundColor = "#ffffff";
+  }
+  ui.meetingDate.value   = "";
+  ui.calendarTitle.value = "";
+  ui.hiddenZoom.value    = "";
+  ui.zoomOutput.value    = "";
+  ui.chatQuestion.value  = "";
+};
+
+// --- 更新ロジック ---
+const updateCalendarTitle = () => {
   const entrySelect = ui.entryBox.querySelector('select');
-  const isCoreOk = ui.lineName.value.trim() !== "" && ui.meetingDate.value.trim() !== "" && (entrySelect && entrySelect.value !== "");
-  ui.step1.classList.toggle("disabled-section", !isCoreOk);
-  const isStep1Ok = ["chk1","chk2","chk2_sub","chk3"].every(id => document.getElementById(id).checked);
-  ui.step2.classList.toggle("disabled-section", !(isCoreOk && isStep1Ok));
-  const isStep2Ok = ["chk4","chk5","chk6"].every(id => document.getElementById(id).checked) && ui.zoomDone.value === "done" && ui.chatDone.value === "done";
-  ui.finish.style.display = (isCoreOk && isStep1Ok && isStep2Ok) ? "block" : "none";
+  const media = entrySelect?.value || "";
+  const name  = ui.lineName.value.trim();
+  ui.calendarTitle.value = (name && media) ? `${media}${name}` : "";
 };
 
-// 【改善】LINE名が変わっても、日時や経路は消さない
+const updateZoomMessage = () => {
+  const name = ui.lineName.value.trim();
+  const date = ui.meetingDate.value.trim();
+  
+  if (!name || !date || !ui.hiddenZoom.value) {
+    ui.zoomOutput.value = "";
+    return;
+  }
+  
+  ui.zoomOutput.value = `実施日：${date}\n\n${ui.hiddenZoom.value}\n\n【無料プレゼントはこちら👇】\nhttps://forms.gle/i2XPWLVQE44iYc7b8`;
+};
+
+// --- イベントリスナー ---
+
+// LINE名が変更されたら、名前以外をリセット（名前の入力は邪魔しない）
 ui.lineName.oninput = () => {
-  // チェックボックスとコピー済フラグだけリセット（ガードレールを掛け直すため）
-  ui.checks.forEach(c => c.checked = false);
-  ui.zoomDone.value = ""; ui.chatDone.value = "";
-  document.getElementById("zoomCopyBtn").classList.remove("copy-ok");
-  document.getElementById("chatCopyBtn").classList.remove("copy-ok");
-  
-  // 雑談の質問だけ名前入りに更新
-  ui.chatQuestion.value = ui.lineName.value ? `${ui.lineName.value.trim()}さんはこれまで副業やったことありますか？` : "";
-  
-  // カレンダータイトルも名前が入っていれば更新
-  const media = ui.entryBox.querySelector('select')?.value || "";
-  ui.calendarTitle.value = (ui.lineName.value && media) ? `${media}${ui.lineName.value.trim()}` : "";
-
-  refresh();
+  resetAll(); 
+  ui.chatQuestion.value = ui.lineName.value ? `${ui.lineName.value}さんはこれまで副業やったことありますか？` : "";
+  updateCalendarTitle();
+  updateZoomMessage();
 };
 
-ui.meetingDate.oninput = refresh;
-ui.checks.forEach(c => c.onchange = refresh);
+ui.meetingDate.oninput = updateZoomMessage;
 
-const bindCopy = (btnId, targetEl, flagEl) => {
+// 「初期化」ボタンクリック時
+document.getElementById("clearBtn").onclick = () => {
+  ui.lineName.value = "";
+  resetAll();
+};
+
+const bindCopy = (btnId, targetEl) => {
   document.getElementById(btnId).onclick = () => {
     if (!targetEl.value) return;
     targetEl.select();
     document.execCommand("copy");
-    if(flagEl) { flagEl.value = "done"; document.getElementById(btnId).classList.add("copy-ok"); refresh(); }
   };
 };
 
 bindCopy("lineNameCopyBtn", ui.lineName);
 bindCopy("calendarCopyBtn", ui.calendarTitle);
-bindCopy("zoomCopyBtn", ui.zoomOutput, ui.zoomDone);
-bindCopy("chatCopyBtn", ui.chatQuestion, ui.chatDone);
+bindCopy("zoomCopyBtn",     ui.zoomOutput);
+bindCopy("chatCopyBtn",     ui.chatQuestion);
 
-// 「すべてリセット」ボタンだけが全部を消す
-document.getElementById("clearBtn").onclick = () => {
-  ui.lineName.value = ""; ui.meetingDate.value = ""; ui.calendarTitle.value = ""; ui.zoomOutput.value = "";
-  ui.zoomDone.value = ""; ui.chatDone.value = "";
-  ui.checks.forEach(c => c.checked = false);
-  const s1 = ui.entryBox.querySelector('select'); if(s1) s1.value = "";
-  const s2 = ui.closerBox.querySelector('select'); if(s2) { s2.value = ""; s2.style.backgroundColor = "#fff"; }
-  refresh();
-};
+initEntrySelect(ui.entryBox.id, updateCalendarTitle);
+initCloserSelect(ui.closerBox.id, ui.hiddenZoom.id, updateZoomMessage);
 
-initEntrySelect(ui.entryBox.id, () => {
-  const media = ui.entryBox.querySelector('select')?.value || "";
-  ui.calendarTitle.value = (ui.lineName.value && media) ? `${media}${ui.lineName.value.trim()}` : "";
-  refresh();
-});
-
-initCloserSelect(ui.closerBox.id, ui.hiddenZoom.id, () => {
-  ui.zoomOutput.value = `実施日：${ui.meetingDate.value}\n\n${ui.hiddenZoom.value}\n\n【無料プレゼントはこちら👇】\nhttps://forms.gle/i2XPWLVQE44iYc7b8`;
-  refresh();
-});
 </script>
 </body>
 </html>
