@@ -1,175 +1,99 @@
 :root {
-  --bg: #f6f7fb;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --bg: #f8fafc;
   --card: #ffffff;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --border: #d1d5db;
-  --primary: #111827;
-  --primary-hover: #374151;
-  --secondary: #f3f4f6;
-  --secondary-hover: #e5e7eb;
-  --danger: #dc2626;
-  --shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-  --radius: 16px;
-}
-
-* {
-  box-sizing: border-box;
+  --text: #1e293b;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --radius: 12px;
 }
 
 body {
-  margin: 0;
-  padding: 24px;
-  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg);
   color: var(--text);
-  font-family: Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 20px;
 }
 
 .container {
-  max-width: 960px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
-.page-header {
-  margin-bottom: 24px;
+header {
+  text-align: center;
+  margin-bottom: 30px;
 }
 
-h1 {
-  margin: 0 0 8px;
-  font-size: 30px;
-}
-
-h2 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.subtext,
-.meta-text,
-.help-text,
-.field-note,
-.empty-message {
-  color: var(--muted);
-}
-
-.subtext {
-  margin: 0;
-  font-size: 14px;
-}
-
-.meta-text {
-  margin: 10px 0 0;
-  font-size: 13px;
-}
-
-.help-text {
-  margin: 0 0 12px;
-  font-size: 14px;
-  line-height: 1.6;
-}
+h1 { margin: 0; font-size: 24px; color: #0f172a; }
+.subtitle { margin: 5px 0; color: var(--muted); font-size: 14px; }
 
 .card {
   background: var(--card);
   border-radius: var(--radius);
   padding: 24px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
-}
-
-.hidden {
-  display: none;
+  border: 1px solid var(--border);
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 15px;
 }
+
+h2 { font-size: 16px; margin: 0; }
 
 label {
   display: block;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 8px;
-}
-
-select,
-input,
-textarea,
-button {
-  width: 100%;
   font-size: 14px;
 }
 
-select,
-input,
-textarea {
+select, input, textarea {
+  width: 100%;
+  padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 14px;
-  background: #fff;
-  margin-bottom: 14px;
+  border-radius: 8px;
+  font-size: 15px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
 }
 
-textarea {
-  resize: vertical;
-  min-height: 120px;
-  line-height: 1.7;
+select:focus, input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 
-.field-group {
-  margin-bottom: 18px;
-}
+textarea { min-height: 100px; resize: vertical; }
+#outputText { background-color: #f1f5f9; cursor: default; min-height: 200px; }
 
-.required {
-  color: var(--danger);
-  margin-left: 4px;
-}
-
-button {
-  border: none;
-  border-radius: 12px;
-  padding: 10px 16px;
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.15s ease;
-  width: auto;
-  white-space: nowrap;
+  border: none;
+  transition: 0.2s;
 }
 
-.primary-button {
-  background: var(--primary);
-  color: #fff;
-}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-hover); }
 
-.primary-button:hover {
-  background: var(--primary-hover);
-}
+.btn-secondary { background: #f1f5f9; color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: #e2e8f0; }
 
-.secondary-button {
-  background: var(--secondary);
-  color: var(--text);
-}
+.btn-outline { background: transparent; color: var(--muted); font-size: 13px; }
+.btn-outline:hover { color: #ef4444; }
 
-.secondary-button:hover {
-  background: var(--secondary-hover);
-}
+.meta-info { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.hidden { display: none; }
+.placeholder-text { color: var(--muted); text-align: center; font-style: italic; }
 
-@media (max-width: 640px) {
-  body {
-    padding: 16px;
-  }
-
-  .card {
-    padding: 18px;
-  }
-
-  .section-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  button {
-    width: 100%;
-  }
-}
+.field-group { margin-bottom: 15px; }
