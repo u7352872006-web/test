@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>テンプレート置換ツール</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>テンプレート置換ツール</h1>
+
+    <div class="card">
+      <label for="templateSelect">テンプレート選択</label>
+      <select id="templateSelect">
+        <option value="">選択してください</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h2>入力項目</h2>
+      <div id="fieldsContainer"></div>
+    </div>
+
+    <div class="card">
+      <div class="output-header">
+        <h2>出力テキスト</h2>
+        <button id="copyButton" type="button">コピー</button>
+      </div>
+      <textarea id="outputText" rows="20" readonly></textarea>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
