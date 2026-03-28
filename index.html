@@ -2,67 +2,76 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Template Tool - Sales Pro</title>
+  <title>Template Tool - Advanced Pro</title>
   <style>
-    /* デスクトップ特化：視線移動を最小化するコンパクトな2カラム */
-    body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 5px; font-size: 12px; height: 100vh; overflow: hidden; }
-    .main-grid { display: grid; grid-template-columns: 280px 1fr; gap: 8px; height: 98vh; }
+    body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 10px; font-size: 12px; height: 100vh; overflow: hidden; }
+    /* 左側（入力）を少し広く、右側（出力）とのバランスを調整 */
+    .main-grid { display: grid; grid-template-columns: 400px 1fr; gap: 10px; height: 98vh; }
     
-    .card { background: white; padding: 10px; border-radius: 4px; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: 1px solid #ccc; }
-    h3 { margin: 0 0 6px 0; font-size: 12px; color: #333; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+    .card { background: white; padding: 12px; border-radius: 6px; display: flex; flex-direction: column; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #ccc; }
+    h3 { margin: 0 0 8px 0; font-size: 12px; color: #333; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; }
     
-    .label-tag { font-size: 10px; font-weight: bold; color: #666; margin: 4px 0 2px; display: block; }
-    select, textarea { border: 1px solid #bbb; border-radius: 2px; padding: 4px; font-size: 12px; outline: none; width: 100%; box-sizing: border-box; }
+    .label-tag { font-size: 10px; font-weight: bold; color: #555; margin: 8px 0 3px; display: block; }
+    select, textarea { border: 1px solid #bbb; border-radius: 3px; padding: 6px; font-size: 13px; outline: none; width: 100%; box-sizing: border-box; transition: 0.2s; }
+    select:focus, textarea:focus { border-color: #4a90e2; box-shadow: 0 0 4px rgba(74,144,226,0.2); }
     
-    /* 貼り付け枠をコンパクト化（高さ80px） */
-    #rawInput { height: 80px; flex-grow: 0; border: 1px solid #4a90e2; font-family: monospace; background: #fdfeff; }
+    /* 申し込み情報の貼り付け枠を使いやすく調整 */
+    #rawInput { height: 120px; flex-grow: 0; font-family: monospace; background: #fff; }
     
-    /* 出力結果を最大化 */
-    #resultOutput { flex-grow: 1; resize: none; font-family: monospace; background: #fafafa; border: 1px solid #111; line-height: 1.4; padding: 8px; }
+    /* 生成結果 */
+    #resultOutput { flex-grow: 1; resize: none; font-family: monospace; background: #fafafa; border: 1px solid #333; line-height: 1.5; padding: 10px; }
     
-    .btn-copy { background: #111; color: white; border: none; padding: 3px 10px; border-radius: 2px; cursor: pointer; font-size: 11px; font-weight: bold; }
-    .btn-copy:hover { background: #444; }
-    .btn-copy:active { background: #000; }
+    /* ボタンデザイン */
+    .btn-group { display: flex; gap: 5px; }
+    .btn { border: none; padding: 4px 10px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
+    .btn-black { background: #111; color: white; }
+    .btn-black:hover { background: #444; }
+    .btn-outline { background: #fff; color: #666; border: 1px solid #ccc; }
+    .btn-outline:hover { background: #f0f0f0; }
+
+    /* メモ欄のスタイル */
+    #memoArea { background: #fffbe6; border: 1px solid #ffe58f; padding: 8px; border-radius: 4px; font-size: 11px; color: #856404; margin-top: 10px; min-height: 40px; white-space: pre-wrap; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
 
 <div class="main-grid">
   <div class="card">
-    <h3>設定・入力</h3>
+    <h3>
+      設定・入力
+      <button class="btn btn-outline" onclick="copyRawInput()">入力をコピー</button>
+    </h3>
     
     <span class="label-tag">1. テンプレート選択</span>
-    <select id="tplSelect"><option>読み込み中...</option></select>
+    <select id="tplSelect"><option value="">読み込み中...</option></select>
     
     <span class="label-tag">2. 申し込み情報を貼り付け</span>
-    <textarea id="rawInput" placeholder="ここに情報をペースト"></textarea>
+    <textarea id="rawInput" placeholder="情報をここにペーストしてください"></textarea>
     
     <span class="label-tag">3. セールス担当選択</span>
-    <select id="staffSelect"><option>読み込み中...</option></select>
+    <select id="staffSelect"><option value="">選択してください</option></select>
 
-    <div style="font-size: 10px; color: #999; margin-top: auto; line-height: 1.2;">
-      ※ ペーストや選択を行うと、右側にZoomリンク入りの文章が即座に生成されます。
-    </div>
+    <span class="label-tag">4. テンプレートのメモ</span>
+    <div id="memoArea">テンプレートを選択するとメモが表示されます</div>
   </div>
 
   <div class="card">
     <h3>
       生成結果
-      <button class="btn-copy" onclick="copyResult()">コピー</button>
+      <button class="btn btn-black" onclick="copyResult()">結果をコピー</button>
     </h3>
-    <textarea id="resultOutput" readonly></textarea>
+    <textarea id="resultOutput" readonly placeholder="設定を完了するとここに表示されます"></textarea>
   </div>
 </div>
 
 <script>
-  // API URL設定
   const TPL_API = "https://script.google.com/macros/s/AKfycbwknNEj5910zohQL6xzbLnFPj5HqByNODhKvGAAE3yB4lpQ3aIjxVmVa0cmbkTTEk3V/exec";
   const STAFF_API = "https://script.google.com/macros/s/AKfycbySHVscjhTYWKf8bLJUGIMJ7AArbsp8cS8wl0O8FyYjYoO2mRzMO8jZhcc_cmhDvYfIhA/exec";
   
   let templates = [];
   let staffList = [];
 
-  // 初期読み込み
   window.onload = async () => {
     try {
       const [resTpl, resStaff] = await Promise.all([
@@ -73,38 +82,57 @@
       templates = resTpl;
       staffList = resStaff;
 
-      // テンプレートプルダウン生成
-      document.getElementById("tplSelect").innerHTML = 
+      // テンプレート選択初期化
+      const tSelect = document.getElementById("tplSelect");
+      tSelect.innerHTML = '<option value="">選択してください</option>' + 
         templates.map((t, i) => `<option value="${i}">${t.template_name}</option>`).join('');
 
-      // セールス担当プルダウン生成：名前（ランク）
-      document.getElementById("staffSelect").innerHTML = 
-        staffList.map((s, i) => `<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
-
+      // セールス選択初期化
+      resetStaffSelect();
       update();
-    } catch (e) {
-      console.error(e);
-      alert("データの取得に失敗しました。GASの公開設定（全員に公開）を確認してください。");
-    }
+    } catch (e) { console.error(e); alert("API接続エラーが発生しました。"); }
   };
 
-  // 各要素の変更を監視してリアルタイム更新
   const rawInput = document.getElementById("rawInput");
-  rawInput.addEventListener("input", update);
-  document.getElementById("tplSelect").addEventListener("change", update);
-  document.getElementById("staffSelect").addEventListener("change", update);
+  const tplSelect = document.getElementById("tplSelect");
+  const staffSelect = document.getElementById("staffSelect");
+  const memoArea = document.getElementById("memoArea");
+
+  // 入力監視：貼り付け内容が変わったらセールス担当をリセット
+  rawInput.addEventListener("input", () => {
+    staffSelect.value = ""; 
+    update();
+  });
+
+  tplSelect.addEventListener("change", update);
+  staffSelect.addEventListener("change", update);
+
+  function resetStaffSelect() {
+    staffSelect.innerHTML = '<option value="">選択してください</option>' + 
+      staffList.map((s, i) => `<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
+  }
 
   function update() {
     const rawText = rawInput.value;
-    const tIdx = document.getElementById("tplSelect").value;
-    const sIdx = document.getElementById("staffSelect").value;
+    const tIdx = tplSelect.value;
+    const sIdx = staffSelect.value;
     
-    if (!templates[tIdx] || !staffList[sIdx]) return;
+    // メモ欄の更新
+    if (templates[tIdx]) {
+      memoArea.innerText = templates[tIdx].memo || "（メモなし）";
+    } else {
+      memoArea.innerText = "テンプレートを選択してください";
+    }
+
+    // 必須入力のチェック
+    if (tIdx === "" || sIdx === "") {
+      document.getElementById("resultOutput").value = "";
+      return;
+    }
 
     let body = templates[tIdx].body;
     const staff = staffList[sIdx];
 
-    // 置換データの抽出と整理
     const data = {
       userName: (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim(),
       eventDate: (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim(),
@@ -112,7 +140,6 @@
       zoomLink: staff.zoom || "" 
     };
 
-    // テンプレート内の ${xxx} を一括置換
     Object.keys(data).forEach(key => {
       const regex = new RegExp(`\\$\\{${key}\\}`, "g");
       body = body.replace(regex, data[key]);
@@ -121,15 +148,21 @@
     document.getElementById("resultOutput").value = body;
   }
 
-  // クリップボードへコピー
+  // 貼り付け情報のコピー
+  function copyRawInput() {
+    if (!rawInput.value) return;
+    rawInput.select();
+    document.execCommand("copy");
+    alert("入力をコピーしました");
+  }
+
+  // 生成結果のコピー
   function copyResult() {
     const out = document.getElementById("resultOutput");
     if (!out.value) return;
     out.select();
     document.execCommand("copy");
-    const btn = document.querySelector(".btn-copy");
-    btn.textContent = "完了！";
-    setTimeout(() => btn.textContent = "コピー", 1000);
+    alert("結果をコピーしました");
   }
 </script>
 
