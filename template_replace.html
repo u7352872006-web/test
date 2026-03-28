@@ -3,120 +3,40 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>テンプレート置き換え</title>
+  <title>業務ツールポータル</title>
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 10px; font-size: 13px; color: #333; }
-    .nav { margin-bottom: 10px; }
-    .nav a { text-decoration: none; color: #007bff; font-size: 12px; }
-    .container { max-width: 950px; margin: 0 auto; display: flex; gap: 15px; }
-    .panel { flex: 1; border: 1px solid #ccc; padding: 12px; display: flex; flex-direction: column; min-width: 0; }
-    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-    .btn-reset { cursor: pointer; background: #f0f0f0; border: 1px solid #ccc; font-size: 10px; padding: 2px 8px; border-radius: 3px; color: #666; }
-    .label { font-weight: bold; display: block; margin-top: 10px; font-size: 12px; }
-    select, input, textarea { width: 100%; box-sizing: border-box; padding: 6px; margin-top: 4px; border: 1px solid #999; font-size: 14px; }
-    .input-box { margin-bottom: 12px; }
-    /* 出力エリア：編集可能なので背景を白に */
-    #resultOutput { flex-grow: 1; height: 300px; background: #fff; font-family: monospace; line-height: 1.5; }
-    .btn-main { cursor: pointer; padding: 12px; width: 100%; margin-top: 10px; background: #000; color: #fff; border: none; font-weight: bold; font-size: 14px; }
-    .btn-main:disabled { background: #ccc; cursor: not-allowed; }
-    @media (max-width: 700px) { .container { flex-direction: column; } }
+    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+    h1 { font-size: 20px; color: #333; }
+    .menu-list { list-style: none; padding: 0; }
+    .menu-item { margin-bottom: 10px; }
+    .menu-item a {
+      display: block;
+      padding: 15px;
+      background: #fff;
+      color: #333;
+      text-decoration: none;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .menu-item a:hover {
+      background: #eee;
+    }
   </style>
 </head>
 <body>
 
-<div class="nav"><a href="index.html">← 戻る</a></div>
+  <h1>ツールメニュー</h1>
 
-<div class="container">
-  <div class="panel">
-    <div class="header-row">
-      <strong>【設定・入力】</strong>
-      <button class="btn-reset" onclick="location.reload()">クリア</button>
-    </div>
-    <span class="label">1. テンプレート選択</span>
-    <select id="tplSelect" onchange="generateInputs()"><option value="">読み込み中...</option></select>
-    <div id="dynamicInputs"></div>
-  </div>
+  <ul class="menu-list">
+    <li class="menu-item">
+      <a href="calendar_reserve.html">🗓 カレンダー予約ツール</a>
+    </li>
+    
+    <li class="menu-item">
+      <a href="template_replace.html">📝 テンプレート置き換えツール</a>
+    </li>
+  </ul>
 
-  <div class="panel">
-    <div class="header-row"><strong>【出力結果】</strong></div>
-    <span class="label">プレビュー（直接編集できます）</span>
-    <textarea id="resultOutput" placeholder="すべての項目を入力すると表示されます"></textarea>
-    <button id="copyBtn" class="btn-main" onclick="copyText()" disabled>コピー</button>
-  </div>
-</div>
-
-<script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbwMt-RMzTgSkAAcB3Xv0FC5LPeOJ8xWN-eyLydAdG4FG12_7xfHY7PzsbguuyAVOJv8/exec"; 
-  let templates = [];
-
-  window.onload = async () => {
-    try {
-      const res = await fetch(API_URL);
-      templates = await res.json();
-      const select = document.getElementById("tplSelect");
-      select.innerHTML = '<option value="">選択してください</option>' + 
-        templates.map((t, i) => `<option value="${i}">${t.title}</option>`).join('');
-    } catch (e) {
-      document.getElementById("tplSelect").innerHTML = '<option value="">読込失敗</option>';
-    }
-  };
-
-  function generateInputs() {
-    const idx = document.getElementById("tplSelect").value;
-    const container = document.getElementById("dynamicInputs");
-    container.innerHTML = "";
-    document.getElementById("resultOutput").value = "";
-    document.getElementById("copyBtn").disabled = true;
-
-    if (idx === "") return;
-
-    const fields = templates[idx].fields.split(',');
-    // ガイド文字（D列）を分割。なければ空配列。
-    const guides = templates[idx].placeholders ? templates[idx].placeholders.split(',') : [];
-
-    fields.forEach((field, i) => {
-      if(!field.trim()) return;
-      const div = document.createElement("div");
-      div.className = "input-box";
-      // ガイド文字があればplaceholderにセット
-      const placeholderText = guides[i] ? guides[i].trim() : "";
-      div.innerHTML = `<span class="label">${field.trim()}</span>
-                       <input type="text" class="field-input" data-key="${field.trim()}" 
-                        placeholder="${placeholderText}" oninput="validateAndRender()">`;
-      container.appendChild(div);
-    });
-  }
-
-  function validateAndRender() {
-    const idx = document.getElementById("tplSelect").value;
-    const inputs = document.querySelectorAll(".field-input");
-    const resultArea = document.getElementById("resultOutput");
-    const copyBtn = document.getElementById("copyBtn");
-
-    if (idx === "" || inputs.length === 0) return;
-
-    let allFilled = true;
-    inputs.forEach(input => { if (input.value.trim() === "") allFilled = false; });
-
-    if (allFilled) {
-      let body = templates[idx].body;
-      inputs.forEach(input => {
-        const key = input.getAttribute("data-key");
-        body = body.split(`\${${key}}`).join(input.value.trim());
-      });
-      resultArea.value = body;
-      copyBtn.disabled = false;
-    } else {
-      resultArea.value = "";
-      copyBtn.disabled = true;
-    }
-  }
-
-  function copyText() {
-    const el = document.getElementById("resultOutput");
-    el.select();
-    document.execCommand("copy");
-  }
-</script>
 </body>
 </html>
