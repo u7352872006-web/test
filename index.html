@@ -3,28 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sales Tool</title>
+  <title>Compact Sales Tool</title>
   <style>
-    /* 最小限のレイアウト設定のみ */
-    body { font-family: sans-serif; padding: 10px; line-height: 1.4; background: #fff; }
-    .section { margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; }
-    .label { font-weight: bold; font-size: 0.9em; display: block; margin-top: 10px; }
+    /* 全体のサイズ感を一回り小さく設定 */
+    body { font-family: sans-serif; background: #fff; margin: 0; padding: 10px; font-size: 13px; color: #333; }
     
-    select, textarea, input { width: 100%; box-sizing: border-box; padding: 8px; margin-top: 5px; border: 1px solid #999; font-size: 16px; } /* スマホでズームしないよう16px */
-    textarea { height: 120px; font-family: monospace; }
+    /* 左右2分割のレイアウト（幅を絞って中央寄せ） */
+    .container { 
+      max-width: 900px; /* 横に広がりすぎないよう制限 */
+      margin: 0 auto; 
+      display: flex; 
+      gap: 15px; 
+    }
     
-    .btn { cursor: pointer; padding: 10px; font-weight: bold; margin-top: 10px; width: 100%; }
-    .btn-reset { background: #eee; color: #000; }
+    .panel { flex: 1; border: 1px solid #ccc; padding: 12px; min-width: 0; }
+    
+    .label { font-weight: bold; display: block; margin-top: 8px; font-size: 12px; }
+    
+    select, textarea, input { 
+      width: 100%; box-sizing: border-box; padding: 6px; margin-top: 4px; 
+      border: 1px solid #999; font-size: 13px; 
+    }
+    
+    /* 入力エリアの高さ */
+    #rawInput { height: 140px; }
+    /* 本文エリアの高さ */
+    #resultOutput { height: 320px; background: #fafafa; }
+
+    .btn { cursor: pointer; padding: 8px; font-weight: bold; width: 100%; margin-top: 8px; border: 1px solid #000; }
+    .btn-reset { background: #fff; color: #666; border-color: #ccc; font-size: 11px; margin-bottom: 10px; }
     .btn-copy { background: #000; color: #fff; }
-    .btn-copy:disabled { background: #ccc; }
+    .btn-copy:disabled { background: #ccc; border-color: #ccc; cursor: not-allowed; }
 
     .hidden { display: none; }
-    .memo { font-size: 0.8em; color: #666; margin-top: 5px; }
+    .memo { font-size: 11px; color: #777; margin-top: 8px; background: #f9f9f9; padding: 5px; }
+    
+    /* スマホで見るときは縦並びに戻す */
+    @media (max-width: 600px) {
+      .container { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="section">
+<div class="container">
+  <div class="panel">
     <strong>【設定入力】</strong>
     <button class="btn btn-reset" onclick="resetAll()">すべてリセット</button>
 
@@ -32,36 +55,37 @@
     <select id="tplSelect"><option value="">読み込み中...</option></select>
     
     <span class="label">2. 申し込み情報</span>
-    <textarea id="rawInput"></textarea>
+    <textarea id="rawInput" placeholder="ペーストしてください"></textarea>
     
     <span class="label">3. お客様LINE名 (必須)</span>
-    <input type="text" id="lineNameInput">
+    <input type="text" id="lineNameInput" placeholder="田中様">
 
     <span class="label">4. セールス担当</span>
     <select id="staffSelect"><option value="">選択してください</option></select>
 
-    <div id="memoArea" class="memo">テンプレートを選択してください</div>
+    <div id="memoArea" class="memo"></div>
   </div>
 
-  <div class="section">
+  <div class="panel">
     <strong>【出力結果】</strong>
 
     <div id="calBox" class="hidden">
-      <span class="label">カレンダータイトル</span>
+      <span class="label">カレンダー用</span>
       <input type="text" id="calOutput" readonly>
       <button class="btn" onclick="copy(this, 'calOutput')">タイトルをコピー</button>
     </div>
 
     <div id="threadBox" class="hidden">
-      <span class="label">スレッド</span>
+      <span class="label">スレッド用</span>
       <input type="text" id="threadOutput" readonly>
       <button class="btn" onclick="copy(this, 'threadOutput')">スレッドをコピー</button>
     </div>
 
     <span class="label">生成本文</span>
-    <textarea id="resultOutput" readonly style="height: 200px;"></textarea>
+    <textarea id="resultOutput" readonly></textarea>
     <button id="mainCopyBtn" class="btn btn-copy" onclick="copy(this, 'resultOutput')" disabled>本文をコピー</button>
   </div>
+</div>
 
 <script>
   const TPL_API = "https://script.google.com/macros/s/AKfycbwknNEj5910zohQL6xzbLnFPj5HqByNODhKvGAAE3yB4lpQ3aIjxVmVa0cmbkTTEk3V/exec";
@@ -75,7 +99,7 @@
       templates = r1; staffList = r2;
       document.getElementById("tplSelect").innerHTML = '<option value="">選択してください</option>' + templates.map((t,i)=>`<option value="${i}">${t.template_name}</option>`).join('');
       document.getElementById("staffSelect").innerHTML = '<option value="">選択してください</option>' + staffList.map((s,i)=>`<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
-    } catch (e) { alert("読込エラー"); }
+    } catch (e) { alert("データ取得失敗"); }
   };
 
   const rawInput = document.getElementById("rawInput");
@@ -83,7 +107,7 @@
   const staffSelect = document.getElementById("staffSelect");
   const lineNameInput = document.getElementById("lineNameInput");
 
-  // 入力が変わったらリセット
+  // 入力が変わったら連動リセット
   rawInput.addEventListener("input", () => { staffSelect.value = ""; update(); });
   [tplSelect, staffSelect, lineNameInput].forEach(el => el.addEventListener("change", update));
   lineNameInput.addEventListener("input", update);
@@ -94,7 +118,6 @@
     const tIdx = tplSelect.value, sIdx = staffSelect.value, lineName = lineNameInput.value.trim(), rawText = rawInput.value.trim();
     const tpl = templates[tIdx];
     
-    // 表示切替
     document.getElementById("calBox").className = (tpl && tpl.calendar_title) ? "" : "hidden";
     document.getElementById("threadBox").className = (tpl && tpl.thread) ? "" : "hidden";
     document.getElementById("memoArea").innerText = tpl ? (tpl.memo || "") : "";
@@ -123,7 +146,7 @@
     const el = document.getElementById(id);
     el.select(); document.execCommand("copy");
     const oldText = btn.innerText;
-    btn.innerText = "完了";
+    btn.innerText = "OK";
     setTimeout(() => { btn.innerText = oldText; }, 800);
   }
 </script>
