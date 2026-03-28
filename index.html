@@ -2,52 +2,94 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>業務テンプレートツール</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Template Tool</title>
+  <style>
+    body { font-family: sans-serif; background: #eee; margin: 0; padding: 10px; font-size: 13px; }
+    .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; height: 90vh; }
+    .card { background: white; padding: 10px; border-radius: 4px; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h3 { margin: 0 0 10px 0; font-size: 14px; color: #333; display: flex; justify-content: space-between; }
+    select, textarea { border: 1px solid #ccc; border-radius: 3px; padding: 5px; font-size: 13px; outline: none; }
+    select { margin-bottom: 10px; width: 100%; }
+    textarea { flex-grow: 1; resize: none; font-family: monospace; }
+    .btn-copy { background: #333; color: white; border: none; padding: 4px 10px; border-radius: 3px; cursor: pointer; font-size: 11px; }
+    .btn-copy:active { background: #666; }
+    .label-mini { font-size: 11px; color: #666; margin-bottom: 3px; }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>テンプレート文章作成ツール</h1>
-      <p class="subtitle">スプレッドシート管理・自動入力対応</p>
-    </header>
 
-    <div class="card">
-      <label for="templateSelect">使用するテンプレート</label>
-      <select id="templateSelect">
-        <option value="">テンプレートを読み込み中...</option>
-      </select>
-      <div id="templateMeta" class="meta-info"></div>
-    </div>
-
-    <div id="parserSection" class="card hidden">
-      <div class="section-header">
-        <h2>申し込みフォーム解析</h2>
-        <button id="parseButton" class="btn btn-secondary">自動入力を実行</button>
-      </div>
-      <textarea id="formPasteText" placeholder="ここに申し込みフォームの本文を貼り付けてください"></textarea>
-    </div>
-
-    <div class="card">
-      <div class="section-header">
-        <h2>入力項目</h2>
-        <button id="clearButton" class="btn btn-outline">クリア</button>
-      </div>
-      <div id="fieldsContainer">
-        <p class="placeholder-text">テンプレートを選択してください</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-header">
-        <h2>出力テキスト</h2>
-        <button id="copyButton" class="btn btn-primary">コピー</button>
-      </div>
-      <textarea id="outputText" readonly placeholder="生成された文章がここに表示されます"></textarea>
-    </div>
+<div class="main-grid">
+  <div class="card">
+    <h3>① テンプレート選択</h3>
+    <select id="tplSelect"><option>読み込み中...</option></select>
+    
+    <div class="label-mini">② 申し込み情報を貼り付け（即時反映）</div>
+    <textarea id="rawInput" placeholder="■お名前：〇〇&#10;■日程：〇〇..."></textarea>
   </div>
 
-  <script src="script.js"></script>
+  <div class="card">
+    <h3>
+      ③ 出力結果
+      <button class="btn-copy" onclick="copyResult()">コピー</button>
+    </h3>
+    <textarea id="resultOutput" readonly placeholder="ここに自動生成されます"></textarea>
+  </div>
+</div>
+
+<script>
+  // ★ここにGASのURLを貼ってください
+  const API_URL = "https://script.google.com/macros/s/AKfycbwl8yz_hAt_U8E7212T7rF1DgA2wHbWNO-4bcSP_QFbL5dLLYTwC5TPbOGEmc_bsygr/exec";
+  
+  let templates = [];
+
+  // 起動時にスプレッドシートから読み込み
+  window.onload = async () => {
+    try {
+      const res = await fetch(API_URL);
+      templates = await res.json();
+      const select = document.getElementById("tplSelect");
+      select.innerHTML = templates.map((t, i) => `<option value="${i}">${t.template_name}</option>`).join('');
+      // 初期実行
+      update();
+    } catch (e) { alert("データ読み込み失敗"); }
+  };
+
+  // 貼り付けエリアの入力を監視（inputイベントで即時反応）
+  document.getElementById("rawInput").addEventListener("input", update);
+  document.getElementById("tplSelect").addEventListener("change", update);
+
+  function update() {
+    const rawText = document.getElementById("rawInput").value;
+    const tplIndex = document.getElementById("tplSelect").value;
+    if (!templates[tplIndex]) return;
+
+    let body = templates[tplIndex].body;
+
+    // 抽出ルール（正規表現）
+    const data = {
+      userName: (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim(),
+      eventDate: (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim(),
+      eventName: (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim()
+    };
+
+    // 置換処理：${key} を 抽出した値に置き換え（値がない場合は空文字）
+    Object.keys(data).forEach(key => {
+      const regex = new RegExp(`\\$\\{${key}\\}`, "g");
+      body = body.replace(regex, data[key] || "");
+    });
+
+    document.getElementById("resultOutput").value = body;
+  }
+
+  function copyResult() {
+    const out = document.getElementById("resultOutput");
+    out.select();
+    document.execCommand("copy");
+    const btn = document.querySelector(".btn-copy");
+    btn.textContent = "完了！";
+    setTimeout(() => btn.textContent = "コピー", 1000);
+  }
+</script>
+
 </body>
 </html>
