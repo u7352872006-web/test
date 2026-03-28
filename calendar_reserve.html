@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>カレンダー予約ツール</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 10px; font-size: 13px; }
+    .nav { margin-bottom: 10px; }
+    .container { max-width: 950px; margin: 0 auto; display: flex; gap: 15px; }
+    .panel { flex: 1; border: 1px solid #ccc; padding: 10px; display: flex; flex-direction: column; }
+    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .btn-small { cursor: pointer; font-size: 10px; padding: 2px 5px; background: #eee; border: 1px solid #ccc; }
+    .label { font-weight: bold; display: block; margin-top: 10px; }
+    select, textarea, input { width: 100%; box-sizing: border-box; padding: 5px; margin-top: 3px; border: 1px solid #999; font-size: 14px; }
+    #rawInput { height: 150px; }
+    #resultOutput { flex-grow: 1; height: 300px; background: #f9f9f9; }
+    .flex-row { display: flex; gap: 5px; margin-top: 3px; }
+    .flex-row input { flex: 1; }
+    .btn-copy { cursor: pointer; padding: 5px 10px; background: #eee; border: 1px solid #999; font-size: 11px; white-space: nowrap; }
+    .btn-main { cursor: pointer; padding: 10px; width: 100%; margin-top: 10px; background: #333; color: #fff; border: none; font-weight: bold; }
+    .btn-main:disabled { background: #ccc; }
+    .hidden { display: none !important; }
+    .memo { font-size: 11px; color: #666; margin-top: 10px; }
+    @media (max-width: 700px) { .container { flex-direction: column; } }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="index.html">← 戻る</a>
+</div>
+
+<div class="container">
+  <div class="panel">
+    <div class="header-row">
+      <strong>【入力】</strong>
+      <button class="btn-small" onclick="resetAll()">クリア</button>
+    </div>
+    <span class="label">1. テンプレート</span>
+    <select id="tplSelect"><option value="">読込中...</option></select>
+    <div class="header-row" style="margin-top:10px; margin-bottom:0;">
+      <span class="label" style="margin-top:0;">2. 申し込み情報</span>
+      <button class="btn-small" onclick="copyText('rawInput')">コピー</button>
+    </div>
+    <textarea id="rawInput"></textarea>
+    <span class="label">3. お客様LINE名 (必須)</span>
+    <input type="text" id="lineNameInput">
+    <span class="label">4. セールス担当</span>
+    <select id="staffSelect"></select>
+    <div id="memoArea" class="memo"></div>
+  </div>
+
+  <div class="panel">
+    <strong>【出力】</strong>
+    <div id="calBox" class="hidden">
+      <span class="label">カレンダータイトル</span>
+      <div class="flex-row">
+        <input type="text" id="calOutput" readonly>
+        <button class="btn-copy" onclick="copyText('calOutput')">コピー</button>
+      </div>
+    </div>
+    <div id="threadBox" class="hidden">
+      <span class="label">スレッド用</span>
+      <div class="flex-row">
+        <input type="text" id="threadOutput" readonly>
+        <button class="btn-copy" onclick="copyText('threadOutput')">コピー</button>
+      </div>
+    </div>
+    <span class="label">本文</span>
+    <textarea id="resultOutput" readonly></textarea>
+    <button id="mainCopyBtn" class="btn-main" onclick="copyText('resultOutput')" disabled>本文をコピー</button>
+  </div>
+</div>
+
+<script>
+  const TPL_API = "https://script.google.com/macros/s/AKfycbwknNEj5910zohQL6xzbLnFPj5HqByNODhKvGAAE3yB4lpQ3aIjxVmVa0cmbkTTEk3V/exec";
+  const STAFF_API = "https://script.google.com/macros/s/AKfycbySHVscjhTYWKf8bLJUGIMJ7AArbsp8cS8wl0O8FyYjYoO2mRzMO8jZhcc_cmhDvYfIhA/exec";
+  let templates = [], staffList = [];
+
+  window.onload = async () => {
+    try {
+      const [r1, r2] = await Promise.all([fetch(TPL_API).then(r=>r.json()), fetch(STAFF_API).then(r=>r.json())]);
+      templates = r1; staffList = r2;
+      document.getElementById("tplSelect").innerHTML = '<option value="">選択</option>' + templates.map((t,i)=>`<option value="${i}">${t.template_name}</option>`).join('');
+      document.getElementById("staffSelect").innerHTML = '<option value="">選択</option>' + staffList.map((s,i)=>`<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
+    } catch (e) {}
+  };
+
+  const rawInput = document.getElementById("rawInput");
+  const tplSelect = document.getElementById("tplSelect");
+  const staffSelect = document.getElementById("staffSelect");
+  const lineNameInput = document.getElementById("lineNameInput");
+
+  rawInput.addEventListener("input", () => { staffSelect.value = ""; update(); });
+  [tplSelect, staffSelect, lineNameInput].forEach(el => el.addEventListener("change", update));
+  lineNameInput.addEventListener("input", update);
+
+  function resetAll() { if(confirm("クリアしますか？")) location.reload(); }
+
+  function update() {
+    const tIdx = tplSelect.value, sIdx = staffSelect.value, lineName = lineNameInput.value.trim(), rawText = rawInput.value.trim();
+    const tpl = templates[tIdx];
+    document.getElementById("calBox").className = (tpl && tpl.calendar_title) ? "" : "hidden";
+    document.getElementById("threadBox").className = (tpl && tpl.thread) ? "" : "hidden";
+    document.getElementById("memoArea").innerText = tpl ? (tpl.memo || "") : "";
+    if(tpl && tpl.calendar_title) document.getElementById("calOutput").value = `${tpl.calendar_title}_${lineName}`;
+    if(tpl && tpl.thread) document.getElementById("threadOutput").value = `${tpl.thread}${lineName}`;
+    const allOk = (tIdx !== "" && sIdx !== "" && lineName !== "" && rawText !== "");
+    document.getElementById("mainCopyBtn").disabled = !allOk;
+    if (!allOk) { document.getElementById("resultOutput").value = ""; return; }
+    let body = tpl.body;
+    const staff = staffList[sIdx];
+    const data = {
+      userName: (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim(),
+      eventDate: (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim(),
+      eventName: (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim(),
+      zoomLink: staff.zoom || "" 
+    };
+    Object.keys(data).forEach(k => body = body.replace(new RegExp(`\\$\\{${k}\\}`, "g"), data[k]));
+    document.getElementById("resultOutput").value = body;
+  }
+
+  function copyText(id) {
+    const el = document.getElementById(id);
+    if (el.value) { el.select(); document.execCommand("copy"); }
+  }
+</script>
+</body>
+</html>
