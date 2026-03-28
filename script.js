@@ -1,5 +1,5 @@
 // ★ GASのデプロイURLに書き換えてください
-const API_URL = "https://script.google.com/macros/s/AKfycbzyheW4RdB_jYSf1ffYtVL5dg1CghQxCmSbpywaCeO-1ATGX5jX7VXStSscmA3hZj4R/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwl8yz_hAt_U8E7212T7rF1DgA2wHbWNO-4bcSP_QFbL5dLLYTwC5TPbOGEmc_bsygr/exec";
 
 let templates = [];
 let currentTemplate = null;
