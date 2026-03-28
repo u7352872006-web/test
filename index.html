@@ -2,87 +2,129 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Template Tool</title>
+  <title>Template Tool - Sales Pro</title>
   <style>
-    body { font-family: sans-serif; background: #eee; margin: 0; padding: 10px; font-size: 13px; }
-    .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; height: 90vh; }
-    .card { background: white; padding: 10px; border-radius: 4px; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    h3 { margin: 0 0 10px 0; font-size: 14px; color: #333; display: flex; justify-content: space-between; }
-    select, textarea { border: 1px solid #ccc; border-radius: 3px; padding: 5px; font-size: 13px; outline: none; }
-    select { margin-bottom: 10px; width: 100%; }
-    textarea { flex-grow: 1; resize: none; font-family: monospace; }
-    .btn-copy { background: #333; color: white; border: none; padding: 4px 10px; border-radius: 3px; cursor: pointer; font-size: 11px; }
-    .btn-copy:active { background: #666; }
-    .label-mini { font-size: 11px; color: #666; margin-bottom: 3px; }
+    /* デスクトップ特化：視線移動を最小化するコンパクトな2カラム */
+    body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 5px; font-size: 12px; height: 100vh; overflow: hidden; }
+    .main-grid { display: grid; grid-template-columns: 280px 1fr; gap: 8px; height: 98vh; }
+    
+    .card { background: white; padding: 10px; border-radius: 4px; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: 1px solid #ccc; }
+    h3 { margin: 0 0 6px 0; font-size: 12px; color: #333; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+    
+    .label-tag { font-size: 10px; font-weight: bold; color: #666; margin: 4px 0 2px; display: block; }
+    select, textarea { border: 1px solid #bbb; border-radius: 2px; padding: 4px; font-size: 12px; outline: none; width: 100%; box-sizing: border-box; }
+    
+    /* 貼り付け枠をコンパクト化（高さ80px） */
+    #rawInput { height: 80px; flex-grow: 0; border: 1px solid #4a90e2; font-family: monospace; background: #fdfeff; }
+    
+    /* 出力結果を最大化 */
+    #resultOutput { flex-grow: 1; resize: none; font-family: monospace; background: #fafafa; border: 1px solid #111; line-height: 1.4; padding: 8px; }
+    
+    .btn-copy { background: #111; color: white; border: none; padding: 3px 10px; border-radius: 2px; cursor: pointer; font-size: 11px; font-weight: bold; }
+    .btn-copy:hover { background: #444; }
+    .btn-copy:active { background: #000; }
   </style>
 </head>
 <body>
 
 <div class="main-grid">
   <div class="card">
-    <h3>① テンプレート選択</h3>
+    <h3>設定・入力</h3>
+    
+    <span class="label-tag">1. テンプレート選択</span>
     <select id="tplSelect"><option>読み込み中...</option></select>
     
-    <div class="label-mini">② 申し込み情報を貼り付け（即時反映）</div>
-    <textarea id="rawInput" placeholder="■お名前：〇〇&#10;■日程：〇〇..."></textarea>
+    <span class="label-tag">2. 申し込み情報を貼り付け</span>
+    <textarea id="rawInput" placeholder="ここに情報をペースト"></textarea>
+    
+    <span class="label-tag">3. セールス担当選択</span>
+    <select id="staffSelect"><option>読み込み中...</option></select>
+
+    <div style="font-size: 10px; color: #999; margin-top: auto; line-height: 1.2;">
+      ※ ペーストや選択を行うと、右側にZoomリンク入りの文章が即座に生成されます。
+    </div>
   </div>
 
   <div class="card">
     <h3>
-      ③ 出力結果
+      生成結果
       <button class="btn-copy" onclick="copyResult()">コピー</button>
     </h3>
-    <textarea id="resultOutput" readonly placeholder="ここに自動生成されます"></textarea>
+    <textarea id="resultOutput" readonly></textarea>
   </div>
 </div>
 
 <script>
-  // ★ここにGASのURLを貼ってください
-  const API_URL = "https://script.google.com/macros/s/AKfycbwknNEj5910zohQL6xzbLnFPj5HqByNODhKvGAAE3yB4lpQ3aIjxVmVa0cmbkTTEk3V/exec";
+  // API URL設定
+  const TPL_API = "https://script.google.com/macros/s/AKfycbwknNEj5910zohQL6xzbLnFPj5HqByNODhKvGAAE3yB4lpQ3aIjxVmVa0cmbkTTEk3V/exec";
+  const STAFF_API = "https://script.google.com/macros/s/AKfycbySHVscjhTYWKf8bLJUGIMJ7AArbsp8cS8wl0O8FyYjYoO2mRzMO8jZhcc_cmhDvYfIhA/exec";
   
   let templates = [];
+  let staffList = [];
 
-  // 起動時にスプレッドシートから読み込み
+  // 初期読み込み
   window.onload = async () => {
     try {
-      const res = await fetch(API_URL);
-      templates = await res.json();
-      const select = document.getElementById("tplSelect");
-      select.innerHTML = templates.map((t, i) => `<option value="${i}">${t.template_name}</option>`).join('');
-      // 初期実行
+      const [resTpl, resStaff] = await Promise.all([
+        fetch(TPL_API).then(r => r.json()),
+        fetch(STAFF_API).then(r => r.json())
+      ]);
+      
+      templates = resTpl;
+      staffList = resStaff;
+
+      // テンプレートプルダウン生成
+      document.getElementById("tplSelect").innerHTML = 
+        templates.map((t, i) => `<option value="${i}">${t.template_name}</option>`).join('');
+
+      // セールス担当プルダウン生成：名前（ランク）
+      document.getElementById("staffSelect").innerHTML = 
+        staffList.map((s, i) => `<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
+
       update();
-    } catch (e) { alert("データ読み込み失敗"); }
+    } catch (e) {
+      console.error(e);
+      alert("データの取得に失敗しました。GASの公開設定（全員に公開）を確認してください。");
+    }
   };
 
-  // 貼り付けエリアの入力を監視（inputイベントで即時反応）
-  document.getElementById("rawInput").addEventListener("input", update);
+  // 各要素の変更を監視してリアルタイム更新
+  const rawInput = document.getElementById("rawInput");
+  rawInput.addEventListener("input", update);
   document.getElementById("tplSelect").addEventListener("change", update);
+  document.getElementById("staffSelect").addEventListener("change", update);
 
   function update() {
-    const rawText = document.getElementById("rawInput").value;
-    const tplIndex = document.getElementById("tplSelect").value;
-    if (!templates[tplIndex]) return;
+    const rawText = rawInput.value;
+    const tIdx = document.getElementById("tplSelect").value;
+    const sIdx = document.getElementById("staffSelect").value;
+    
+    if (!templates[tIdx] || !staffList[sIdx]) return;
 
-    let body = templates[tplIndex].body;
+    let body = templates[tIdx].body;
+    const staff = staffList[sIdx];
 
-    // 抽出ルール（正規表現）
+    // 置換データの抽出と整理
     const data = {
       userName: (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim(),
       eventDate: (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim(),
-      eventName: (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim()
+      eventName: (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim(),
+      zoomLink: staff.zoom || "" 
     };
 
-    // 置換処理：${key} を 抽出した値に置き換え（値がない場合は空文字）
+    // テンプレート内の ${xxx} を一括置換
     Object.keys(data).forEach(key => {
       const regex = new RegExp(`\\$\\{${key}\\}`, "g");
-      body = body.replace(regex, data[key] || "");
+      body = body.replace(regex, data[key]);
     });
 
     document.getElementById("resultOutput").value = body;
   }
 
+  // クリップボードへコピー
   function copyResult() {
     const out = document.getElementById("resultOutput");
+    if (!out.value) return;
     out.select();
     document.execCommand("copy");
     const btn = document.querySelector(".btn-copy");
