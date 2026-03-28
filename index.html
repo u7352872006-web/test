@@ -118,7 +118,7 @@
     document.getElementById("memoArea").innerText = tpl ? (tpl.memo || "") : "";
 
     if(tpl && tpl.calendar_title) document.getElementById("calOutput").value = `${tpl.calendar_title}_${lineName}`;
-    if(tpl && tpl.thread) document.getElementById("threadOutput").value = `${tpl.thread}${lineName}`;
+    if(tpl && tpl.thread) document.getElementById("threadOutput").value = `【${lineName}_アポ振りスレッド】`;
 
     const allOk = (tIdx !== "" && sIdx !== "" && lineName !== "" && rawText !== "");
     document.getElementById("mainCopyBtn").disabled = !allOk;
