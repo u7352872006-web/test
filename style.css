@@ -62,6 +62,12 @@ h2 {
   font-size: 13px;
 }
 
+.help-text {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .card {
   background: var(--card);
   border-radius: var(--radius);
