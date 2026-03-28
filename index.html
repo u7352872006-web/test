@@ -3,41 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sales Tool Compact</title>
+  <title>Sales Tool</title>
   <style>
-    /* 最小限のベース設定 */
-    body { font-family: sans-serif; background: #fff; margin: 0; padding: 10px; font-size: 13px; color: #333; }
-    
-    /* 左右2分割レイアウト */
+    body { font-family: sans-serif; margin: 0; padding: 10px; font-size: 13px; }
     .container { max-width: 950px; margin: 0 auto; display: flex; gap: 15px; }
-    .panel { flex: 1; border: 1px solid #ccc; padding: 12px; min-width: 0; display: flex; flex-direction: column; }
+    .panel { flex: 1; border: 1px solid #ccc; padding: 10px; display: flex; flex-direction: column; }
     
-    /* 見出しとクリアボタン */
-    .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 10px; padding-bottom: 5px; }
-    .btn-reset { cursor: pointer; background: #f0f0f0; border: 1px solid #ccc; font-size: 10px; padding: 2px 8px; border-radius: 3px; color: #666; }
+    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .btn-small { cursor: pointer; font-size: 10px; padding: 2px 5px; background: #eee; border: 1px solid #ccc; }
     
-    .label { font-weight: bold; display: block; margin-top: 10px; font-size: 12px; }
-    select, textarea, input { width: 100%; box-sizing: border-box; padding: 6px; margin-top: 4px; border: 1px solid #999; font-size: 14px; }
+    .label { font-weight: bold; display: block; margin-top: 10px; }
+    select, textarea, input { width: 100%; box-sizing: border-box; padding: 5px; margin-top: 3px; border: 1px solid #999; font-size: 14px; }
     
-    /* 入力エリアの高さ */
-    #rawInput { height: 160px; font-family: monospace; }
-    /* 本文エリアの高さ */
-    #resultOutput { flex-grow: 1; height: 350px; background: #fafafa; font-family: monospace; }
+    #rawInput { height: 150px; }
+    #resultOutput { flex-grow: 1; height: 300px; background: #f9f9f9; }
 
-    /* 横並び入力・ボタン */
-    .flex-row { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
-    .flex-row input { flex: 1; margin-top: 0; background: #f0f7ff; font-weight: bold; }
-    .btn-inline { cursor: pointer; padding: 6px 10px; white-space: nowrap; background: #eee; border: 1px solid #999; font-size: 11px; }
-
-    /* メインコピーボタン */
-    .btn-main { cursor: pointer; padding: 12px; font-weight: bold; width: 100%; margin-top: 10px; background: #000; color: #fff; border: none; }
-    .btn-main:disabled { background: #ccc; cursor: not-allowed; }
-
-    /* コピー成功時の色 */
-    .success { background: #28a745 !important; color: #fff !important; border-color: #28a745 !important; }
+    .flex-row { display: flex; gap: 5px; margin-top: 3px; }
+    .flex-row input { flex: 1; }
+    
+    .btn-copy { cursor: pointer; padding: 5px 10px; background: #eee; border: 1px solid #999; font-size: 11px; white-space: nowrap; }
+    .btn-main { cursor: pointer; padding: 10px; width: 100%; margin-top: 10px; background: #333; color: #fff; border: none; font-weight: bold; }
+    .btn-main:disabled { background: #ccc; }
 
     .hidden { display: none; }
-    .memo { font-size: 11px; color: #888; margin-top: 10px; padding: 5px; border-top: 1px dashed #eee; }
+    .memo { font-size: 11px; color: #666; margin-top: 10px; }
     
     @media (max-width: 700px) { .container { flex-direction: column; } }
   </style>
@@ -46,19 +35,22 @@
 
 <div class="container">
   <div class="panel">
-    <div class="panel-header">
-      <strong>【設定・入力】</strong>
-      <button class="btn-reset" onclick="resetAll()">クリア</button>
+    <div class="header-row">
+      <strong>【入力】</strong>
+      <button class="btn-small" onclick="resetAll()">クリア</button>
     </div>
 
     <span class="label">1. テンプレート</span>
-    <select id="tplSelect"><option value="">読み込み中...</option></select>
+    <select id="tplSelect"><option value="">読込中...</option></select>
     
-    <span class="label">2. 申し込み情報</span>
-    <textarea id="rawInput" placeholder="ここに貼り付け"></textarea>
+    <div class="header-row" style="margin-top:10px; margin-bottom:0;">
+      <span class="label" style="margin-top:0;">2. 申し込み情報</span>
+      <button class="btn-small" onclick="copyText('rawInput')">コピー</button>
+    </div>
+    <textarea id="rawInput"></textarea>
     
     <span class="label">3. お客様LINE名 (必須)</span>
-    <input type="text" id="lineNameInput" placeholder="田中様">
+    <input type="text" id="lineNameInput">
 
     <span class="label">4. セールス担当</span>
     <select id="staffSelect"><option value="">選択してください</option></select>
@@ -67,29 +59,27 @@
   </div>
 
   <div class="panel">
-    <div class="panel-header">
-      <strong>【出力結果】</strong>
-    </div>
+    <strong>【出力】</strong>
 
     <div id="calBox" class="hidden">
       <span class="label">カレンダータイトル</span>
       <div class="flex-row">
         <input type="text" id="calOutput" readonly>
-        <button class="btn-inline" onclick="copyText(this, 'calOutput')">コピー</button>
+        <button class="btn-copy" onclick="copyText('calOutput')">コピー</button>
       </div>
     </div>
 
     <div id="threadBox" class="hidden">
       <span class="label">スレッド用</span>
       <div class="flex-row">
-        <input type="text" id="threadOutput" readonly style="background:#f6ffed;">
-        <button class="btn-inline" onclick="copyText(this, 'threadOutput')">コピー</button>
+        <input type="text" id="threadOutput" readonly>
+        <button class="btn-copy" onclick="copyText('threadOutput')">コピー</button>
       </div>
     </div>
 
     <span class="label">本文</span>
     <textarea id="resultOutput" readonly></textarea>
-    <button id="mainCopyBtn" class="btn-main" onclick="copyText(this, 'resultOutput')" disabled>本文をコピー</button>
+    <button id="mainCopyBtn" class="btn-main" onclick="copyText('resultOutput')" disabled>本文をコピー</button>
   </div>
 </div>
 
@@ -105,7 +95,7 @@
       templates = r1; staffList = r2;
       document.getElementById("tplSelect").innerHTML = '<option value="">選択してください</option>' + templates.map((t,i)=>`<option value="${i}">${t.template_name}</option>`).join('');
       document.getElementById("staffSelect").innerHTML = '<option value="">選択してください</option>' + staffList.map((s,i)=>`<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
-    } catch (e) { alert("データ取得エラー"); }
+    } catch (e) { console.error(e); }
   };
 
   const rawInput = document.getElementById("rawInput");
@@ -113,12 +103,11 @@
   const staffSelect = document.getElementById("staffSelect");
   const lineNameInput = document.getElementById("lineNameInput");
 
-  // 入力変更で連動リセット
   rawInput.addEventListener("input", () => { staffSelect.value = ""; update(); });
   [tplSelect, staffSelect, lineNameInput].forEach(el => el.addEventListener("change", update));
   lineNameInput.addEventListener("input", update);
 
-  function resetAll() { if(confirm("入力をすべて消去しますか？")) location.reload(); }
+  function resetAll() { if(confirm("クリアしますか？")) location.reload(); }
 
   function update() {
     const tIdx = tplSelect.value, sIdx = staffSelect.value, lineName = lineNameInput.value.trim(), rawText = rawInput.value.trim();
@@ -148,22 +137,11 @@
     document.getElementById("resultOutput").value = body;
   }
 
-  async function copyText(btn, id) {
+  function copyText(id) {
     const el = document.getElementById(id);
     if (!el.value) return;
     el.select();
-    try {
-      await navigator.clipboard.writeText(el.value);
-      const oldText = btn.innerText;
-      btn.innerText = "完了";
-      btn.classList.add("success");
-      setTimeout(() => {
-        btn.innerText = oldText;
-        btn.classList.remove("success");
-      }, 800);
-    } catch (err) {
-      document.execCommand("copy");
-    }
+    document.execCommand("copy");
   }
 </script>
 </body>
