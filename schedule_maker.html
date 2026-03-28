@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>候補日程の作成</title>
+<style>
+  body { font-family: sans-serif; margin: 0; padding: 10px; font-size: 13px; color: #333; }
+  /* 戻るリンク */
+  .nav { margin-bottom: 10px; }
+  .nav a { text-decoration: none; color: #007bff; font-size: 12px; font-weight: bold; }
+  
+  h3 { margin: 10px 0; border-left: 4px solid #333; padding-left: 8px; }
+
+  /* 入力エリア */
+  #inputs { margin-bottom: 15px; }
+  #inputs label { display: block; margin-bottom: 8px; }
+  input[type="date"] { padding: 4px; border: 1px solid #999; font-size: 14px; }
+  select { padding: 4px; border: 1px solid #999; font-size: 14px; margin-left: 5px; }
+
+  /* ボタン */
+  .btn-group { margin-bottom: 15px; }
+  button { cursor: pointer; padding: 6px 15px; border: 1px solid #999; background: #eee; font-weight: bold; }
+  #generateBtn { background: #333; color: #fff; border: none; }
+  #resetBtn { background: #fff; color: #666; border: 1px solid #ccc; font-size: 11px; margin-top: 20px; }
+
+  /* 出力エリア */
+  #output { width: 100%; max-width: 400px; height: 250px; background: #fafafa; font-family: monospace; line-height: 1.6; padding: 10px; box-sizing: border-box; }
+</style>
+</head>
+
+<body>
+
+<div class="nav">
+  <a href="index.html">← インデックスに戻る</a>
+</div>
+
+<h3>候補日程の作成📅</h3>
+
+<form id="scheduleForm">
+  <div id="inputs"></div>
+  
+  <div class="btn-group">
+    <button type="button" id="generateBtn">日程を生成する</button>
+    <button type="button" id="copyBtn">コピー</button>
+  </div>
+</form>
+
+<textarea id="output" readonly placeholder="ここに日程候補が表示されます"></textarea>
+
+<br>
+<button type="button" id="resetBtn" onclick="if(confirm('クリアしますか？')) location.reload()">すべての入力をクリア</button>
+
+<script>
+const slots = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"];
+
+// 3時間ごとの時間枠
+const timeOptions = [
+  "10:00～13:00",
+  "11:00～14:00",
+  "12:00～15:00",
+  "13:00～16:00",
+  "14:00～17:00",
+  "15:00～18:00",
+  "16:00～19:00",
+  "17:00～20:00",
+  "18:00～21:00",
+  "19:00～22:00",
+  "20:00～23:00"
+];
+
+// 入力欄を10個生成
+const inputsDiv = document.getElementById("inputs");
+for(let i=0; i<10; i++){
+  const label = document.createElement("label");
+  label.innerHTML = `<span style="display:inline-block; width:25px;">${slots[i]}</span>`;
+
+  const dateInput = document.createElement("input");
+  dateInput.type = "date";
+  dateInput.id = "d" + i;
+
+  const timeSelect = document.createElement("select");
+  timeSelect.id = "t" + i;
+
+  timeOptions.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    timeSelect.appendChild(opt);
+  });
+
+  label.appendChild(dateInput);
+  label.appendChild(timeSelect);
+  inputsDiv.appendChild(label);
+}
+
+// 日程生成
+document.getElementById("generateBtn").onclick = () => {
+  const week = ["日","月","火","水","木","金","土"];
+  let items = [];
+
+  for(let i=0; i<10; i++){
+    const dVal = document.getElementById("d"+i).value;
+    const tVal = document.getElementById("t"+i).value;
+    if(dVal) items.push({ obj: new Date(dVal), time: tVal });
+  }
+
+  // ソート
+  items.sort((a,b) => a.obj - b.obj);
+
+  let res = "【候補日程】\n";
+  items.forEach((item, idx) => {
+    const d = item.obj;
+    const dateStr = `${d.getMonth()+1}/${d.getDate()}(${week[d.getDay()]})`;
+    res += `${slots[idx]} ${dateStr} ${item.time}\n`;
+  });
+
+  document.getElementById("output").value = res.trim();
+};
+
+// コピー
+document.getElementById("copyBtn").onclick = async () => {
+  const el = document.getElementById("output");
+  if(!el.value) return;
+  el.select();
+  document.execCommand("copy");
+};
+</script>
+
+</body>
+</html>
