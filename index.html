@@ -2,63 +2,83 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Template Tool - Professional</title>
+  <title>Safe Template Tool</title>
   <style>
     body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 10px; font-size: 12px; height: 100vh; overflow: hidden; }
-    
-    /* ★ここの「450px」を変更すると左側の横幅が変わります */
-    .main-grid { display: grid; grid-template-columns: 550px 1fr; gap: 15px; height: 98vh; }
+    .main-grid { display: grid; grid-template-columns: 450px 1fr; gap: 15px; height: 98vh; }
     
     .card { background: white; padding: 15px; border-radius: 6px; display: flex; flex-direction: column; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #ccc; }
     h3 { margin: 0 0 10px 0; font-size: 13px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px; }
     
     .label-tag { font-size: 11px; font-weight: bold; color: #555; margin: 10px 0 4px; display: block; }
-    select, textarea { border: 1px solid #bbb; border-radius: 3px; padding: 8px; font-size: 13px; outline: none; width: 100%; box-sizing: border-box; }
+    select, textarea, input { border: 1px solid #bbb; border-radius: 3px; padding: 8px; font-size: 13px; outline: none; width: 100%; box-sizing: border-box; }
     
-    /* 貼り付け枠 */
-    #rawInput { height: 120px; flex-grow: 0; font-family: monospace; border: 1px solid #4a90e2; }
-    
-    /* 結果表示枠 */
+    /* 必須項目が未入力時のスタイル */
+    .required-empty { border: 2px solid #ff4d4f !important; background: #fff1f0; }
+
+    #rawInput { height: 100px; flex-grow: 0; font-family: monospace; }
     #resultOutput { flex-grow: 1; resize: none; font-family: monospace; background: #fafafa; border: 2px solid #333; line-height: 1.5; padding: 10px; }
     
-    /* ボタン類 */
-    .action-row { display: flex; justify-content: flex-end; margin-top: 5px; }
-    .btn { border: none; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; }
-    .btn-black { background: #111; color: white; padding: 8px 16px; font-size: 12px; }
+    .action-row { display: flex; justify-content: flex-end; margin-top: 5px; gap: 8px; align-items: center; }
+    
+    /* ボタンデザイン */
+    .btn { border: none; padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
+    .btn-black { background: #111; color: white; }
+    .btn-black:disabled { background: #ccc; cursor: not-allowed; }
     .btn-outline { background: #fff; color: #4a90e2; border: 1px solid #4a90e2; }
-    .btn-outline:hover { background: #f0f7ff; }
+    .btn-outline:disabled { color: #ccc; border-color: #eee; cursor: not-allowed; }
+    .btn-red { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
+    .btn-red:hover { background: #ff4d4f; color: white; }
 
-    /* メモ表示エリア */
-    #memoArea { background: #fffbe6; border: 1px solid #ffe58f; padding: 10px; border-radius: 4px; font-size: 11px; color: #856404; margin-top: 10px; min-height: 50px; white-space: pre-wrap; }
+    #memoArea { background: #fffbe6; border: 1px solid #ffe58f; padding: 10px; border-radius: 4px; font-size: 11px; color: #856404; margin-top: 10px; min-height: 40px; white-space: pre-wrap; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
 <div class="main-grid">
   <div class="card">
-    <h3>設定・入力</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; margin-bottom:10px;">
+      <h3 style="border:none; margin:0;">設定・入力</h3>
+      <button class="btn btn-red" onclick="resetAll()">全項目を初期化</button>
+    </div>
     
     <span class="label-tag">1. テンプレート選択</span>
-    <select id="tplSelect"><option value="">読み込み中...</option></select>
+    <select id="tplSelect" class="required-field"><option value="">読み込み中...</option></select>
     
     <span class="label-tag">2. 申し込み情報を貼り付け</span>
-    <textarea id="rawInput" placeholder="ここに情報をペーストしてください"></textarea>
+    <textarea id="rawInput" class="required-field" placeholder="情報をペーストしてください"></textarea>
     <div class="action-row">
-      <button class="btn btn-outline" onclick="copyRawInput()">貼り付け内容をコピー</button>
+      <button id="copyRawBtn" class="btn btn-outline" onclick="copyText('rawInput')" disabled>内容をコピー</button>
     </div>
     
     <span class="label-tag">3. セールス担当選択</span>
-    <select id="staffSelect"><option value="">選択してください</option></select>
+    <select id="staffSelect" class="required-field"><option value="">選択してください</option></select>
 
-    <span class="label-tag">4. 担当者へのメモ</span>
-    <div id="memoArea">テンプレートを選択するとメモが表示されます</div>
+    <div id="lineNameContainer" class="hidden">
+      <span class="label-tag">4. お客様のLINE名を入力 (必須)</span>
+      <input type="text" id="lineNameInput" placeholder="例：田中太郎" class="required-field">
+    </div>
+
+    <span class="label-tag">その他メモ</span>
+    <div id="memoArea">テンプレートを選択してください</div>
   </div>
 
   <div class="card">
-    <h3>生成結果</h3>
-    <textarea id="resultOutput" readonly placeholder="設定を完了するとここに表示されます"></textarea>
-    <div class="action-row" style="margin-top: 10px;">
-      <button class="btn btn-black" onclick="copyResult()">生成結果をコピー</button>
+    <div id="calOutputContainer" class="hidden">
+      <h3>カレンダータイトル用</h3>
+      <input type="text" id="calOutput" readonly style="background:#e6f7ff; font-weight:bold;">
+      <div class="action-row">
+        <button id="copyCalBtn" class="btn btn-outline" onclick="copyText('calOutput')">タイトルをコピー</button>
+      </div>
+      <hr style="width:100%; border:0; border-top:1px solid #eee; margin:15px 0;">
+    </div>
+
+    <h3>生成結果（本文）</h3>
+    <textarea id="resultOutput" readonly placeholder="すべての項目を正しく入力・選択してください"></textarea>
+    <div class="action-row">
+      <span id="statusMsg" style="color:#ff4d4f; font-size:10px; font-weight:bold;"></span>
+      <button id="copyResultBtn" class="btn btn-black" onclick="copyText('resultOutput')" disabled>本文をコピー</button>
     </div>
   </div>
 </div>
@@ -76,97 +96,117 @@
         fetch(TPL_API).then(r => r.json()),
         fetch(STAFF_API).then(r => r.json())
       ]);
-      
       templates = resTpl;
       staffList = resStaff;
-
-      // テンプレート初期化
-      document.getElementById("tplSelect").innerHTML = 
-        '<option value="">選択してください</option>' + 
+      document.getElementById("tplSelect").innerHTML = '<option value="">選択してください</option>' + 
         templates.map((t, i) => `<option value="${i}">${t.template_name}</option>`).join('');
-
-      // セールス初期化
       initStaffSelect();
       update();
-    } catch (e) { console.error(e); alert("APIの読み込みに失敗しました。"); }
+    } catch (e) { alert("データ取得エラー"); }
   };
 
   const rawInput = document.getElementById("rawInput");
   const tplSelect = document.getElementById("tplSelect");
   const staffSelect = document.getElementById("staffSelect");
+  const lineNameInput = document.getElementById("lineNameInput");
 
-  // 入力が変わったらセールス選択をリセット
+  // 申し込み情報が変わったら強制初期化
   rawInput.addEventListener("input", () => {
     staffSelect.value = ""; 
+    lineNameInput.value = "";
     update();
   });
-
   tplSelect.addEventListener("change", update);
   staffSelect.addEventListener("change", update);
+  lineNameInput.addEventListener("input", update);
 
   function initStaffSelect() {
     staffSelect.innerHTML = '<option value="">選択してください</option>' + 
       staffList.map((s, i) => `<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
   }
 
+  function resetAll() {
+    if(confirm("すべての入力を消去して初期化しますか？")) {
+      rawInput.value = "";
+      tplSelect.value = "";
+      staffSelect.value = "";
+      lineNameInput.value = "";
+      update();
+    }
+  }
+
   function update() {
-    const rawText = rawInput.value;
+    const rawText = rawInput.value.trim();
     const tIdx = tplSelect.value;
     const sIdx = staffSelect.value;
-    
-    // メモ欄更新
-    const memoArea = document.getElementById("memoArea");
-    if (templates[tIdx]) {
-      memoArea.innerText = templates[tIdx].memo || "（メモなし）";
-    } else {
-      memoArea.innerText = "テンプレートを選択してください";
+    const lineName = lineNameInput.value.trim();
+    const tpl = templates[tIdx];
+
+    // UI制御
+    const lineContainer = document.getElementById("lineNameContainer");
+    const calContainer = document.getElementById("calOutputContainer");
+    let isLineRequired = false;
+
+    if (tpl) {
+      document.getElementById("memoArea").innerText = tpl.memo || "（メモなし）";
+      if (tpl.calendar_title && tpl.calendar_title.trim() !== "") {
+        lineContainer.classList.remove("hidden");
+        calContainer.classList.remove("hidden");
+        isLineRequired = true;
+        document.getElementById("calOutput").value = lineName ? `${tpl.calendar_title}_${lineName}` : "";
+      } else {
+        lineContainer.classList.add("hidden");
+        calContainer.classList.add("hidden");
+      }
     }
 
-    // 両方選択されていない場合は結果を空にする
-    if (tIdx === "" || sIdx === "") {
+    // バリデーション（赤枠表示とコピーボタン制御）
+    const isRawOk = rawText !== "";
+    const isTplOk = tIdx !== "";
+    const isStaffOk = sIdx !== "";
+    const isLineOk = !isLineRequired || (lineName !== "");
+
+    document.getElementById("copyRawBtn").disabled = !isRawOk;
+    rawInput.classList.toggle("required-empty", !isRawOk && (isTplOk || isStaffOk));
+    tplSelect.classList.toggle("required-empty", !isTplOk && isRawOk);
+    staffSelect.classList.toggle("required-empty", !isStaffOk && isRawOk);
+    lineNameInput.classList.toggle("required-empty", isLineRequired && !isLineOk);
+
+    const allOk = isRawOk && isTplOk && isStaffOk && isLineOk;
+    const copyResultBtn = document.getElementById("copyResultBtn");
+    copyResultBtn.disabled = !allOk;
+    document.getElementById("statusMsg").innerText = allOk ? "" : "※未入力項目があります";
+
+    if (!allOk) {
       document.getElementById("resultOutput").value = "";
       return;
     }
 
-    let body = templates[tIdx].body;
+    // 生成処理
+    let body = tpl.body;
     const staff = staffList[sIdx];
-
     const data = {
       userName: (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim(),
       eventDate: (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim(),
       eventName: (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim(),
       zoomLink: staff.zoom || "" 
     };
-
     Object.keys(data).forEach(key => {
-      const regex = new RegExp(`\\$\\{${key}\\}`, "g");
-      body = body.replace(regex, data[key]);
+      body = body.replace(new RegExp(`\\$\\{${key}\\}`, "g"), data[key]);
     });
-
     document.getElementById("resultOutput").value = body;
   }
 
-  function copyRawInput() {
-    if (!rawInput.value) return;
-    rawInput.select();
+  function copyText(id) {
+    const el = document.getElementById(id);
+    if (!el.value) return;
+    el.select();
     document.execCommand("copy");
-    // 通知（簡易版）
-    const btn = document.querySelector(".btn-outline");
+    const btn = document.activeElement;
     const originalText = btn.textContent;
-    btn.textContent = "コピー完了！";
+    btn.textContent = "コピー完了";
     setTimeout(() => btn.textContent = originalText, 1000);
   }
-
-  function copyResult() {
-    const out = document.getElementById("resultOutput");
-    if (!out.value) return;
-    out.select();
-    document.execCommand("copy");
-    const btn = document.querySelector(".btn-black");
-    btn.textContent = "結果をコピーしました！";
-    setTimeout(() => btn.textContent = "生成結果をコピー", 1000);
-  }
 </script>
-
 </body>
 </html>
