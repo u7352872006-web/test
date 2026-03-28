@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/XXXXXXXXXXXX/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyW_fwPuel6fJ4mHCN85qtQLRFOnurPHwf342rBDO-TRvmkMxjLazc1b-WxRNmuagyq/exec";
 
 let templates = [];
 let currentTemplate = null;
