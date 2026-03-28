@@ -2,9 +2,11 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Safe Template Tool</title>
+  <title>Safe Template Tool - Calendar Edition</title>
   <style>
     body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 10px; font-size: 12px; height: 100vh; overflow: hidden; }
+    
+    /* 横幅の調整（左側450px） */
     .main-grid { display: grid; grid-template-columns: 450px 1fr; gap: 15px; height: 98vh; }
     
     .card { background: white; padding: 15px; border-radius: 6px; display: flex; flex-direction: column; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #ccc; }
@@ -13,16 +15,20 @@
     .label-tag { font-size: 11px; font-weight: bold; color: #555; margin: 10px 0 4px; display: block; }
     select, textarea, input { border: 1px solid #bbb; border-radius: 3px; padding: 8px; font-size: 13px; outline: none; width: 100%; box-sizing: border-box; }
     
-    /* 必須項目が未入力時のスタイル */
     .required-empty { border: 2px solid #ff4d4f !important; background: #fff1f0; }
 
-    #rawInput { height: 100px; flex-grow: 0; font-family: monospace; }
+    /* ★「盾（縦）」の幅を200pxに広げました */
+    #rawInput { height: 200px; flex-grow: 0; font-family: monospace; border: 1px solid #4a90e2; }
+    
     #resultOutput { flex-grow: 1; resize: none; font-family: monospace; background: #fafafa; border: 2px solid #333; line-height: 1.5; padding: 10px; }
     
     .action-row { display: flex; justify-content: flex-end; margin-top: 5px; gap: 8px; align-items: center; }
     
-    /* ボタンデザイン */
-    .btn { border: none; padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
+    /* カレンダー用：入力欄とボタンを横並びにする */
+    .flex-row { display: flex; gap: 8px; align-items: center; }
+    .flex-row input { flex-grow: 1; }
+
+    .btn { border: none; padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; white-space: nowrap; }
     .btn-black { background: #111; color: white; }
     .btn-black:disabled { background: #ccc; cursor: not-allowed; }
     .btn-outline { background: #fff; color: #4a90e2; border: 1px solid #4a90e2; }
@@ -44,20 +50,20 @@
     </div>
     
     <span class="label-tag">1. テンプレート選択</span>
-    <select id="tplSelect" class="required-field"><option value="">読み込み中...</option></select>
+    <select id="tplSelect"><option value="">読み込み中...</option></select>
     
     <span class="label-tag">2. 申し込み情報を貼り付け</span>
-    <textarea id="rawInput" class="required-field" placeholder="情報をペーストしてください"></textarea>
+    <textarea id="rawInput" placeholder="情報をペーストしてください"></textarea>
     <div class="action-row">
-      <button id="copyRawBtn" class="btn btn-outline" onclick="copyText('rawInput')" disabled>内容をコピー</button>
+      <button id="copyRawBtn" class="btn btn-outline" onclick="copyText('rawInput', this)" disabled>内容をコピー</button>
     </div>
     
     <span class="label-tag">3. セールス担当選択</span>
-    <select id="staffSelect" class="required-field"><option value="">選択してください</option></select>
+    <select id="staffSelect"><option value="">選択してください</option></select>
 
     <div id="lineNameContainer" class="hidden">
       <span class="label-tag">4. お客様のLINE名を入力 (必須)</span>
-      <input type="text" id="lineNameInput" placeholder="例：田中太郎" class="required-field">
+      <input type="text" id="lineNameInput" placeholder="例：田中太郎">
     </div>
 
     <span class="label-tag">その他メモ</span>
@@ -67,9 +73,9 @@
   <div class="card">
     <div id="calOutputContainer" class="hidden">
       <h3>カレンダータイトル用</h3>
-      <input type="text" id="calOutput" readonly style="background:#e6f7ff; font-weight:bold;">
-      <div class="action-row">
-        <button id="copyCalBtn" class="btn btn-outline" onclick="copyText('calOutput')">タイトルをコピー</button>
+      <div class="flex-row">
+        <input type="text" id="calOutput" readonly style="background:#e6f7ff; font-weight:bold;">
+        <button id="copyCalBtn" class="btn btn-outline" onclick="copyText('calOutput', this)">コピー</button>
       </div>
       <hr style="width:100%; border:0; border-top:1px solid #eee; margin:15px 0;">
     </div>
@@ -78,7 +84,7 @@
     <textarea id="resultOutput" readonly placeholder="すべての項目を正しく入力・選択してください"></textarea>
     <div class="action-row">
       <span id="statusMsg" style="color:#ff4d4f; font-size:10px; font-weight:bold;"></span>
-      <button id="copyResultBtn" class="btn btn-black" onclick="copyText('resultOutput')" disabled>本文をコピー</button>
+      <button id="copyResultBtn" class="btn btn-black" onclick="copyText('resultOutput', this)" disabled>本文をコピー</button>
     </div>
   </div>
 </div>
@@ -110,7 +116,6 @@
   const staffSelect = document.getElementById("staffSelect");
   const lineNameInput = document.getElementById("lineNameInput");
 
-  // 申し込み情報が変わったら強制初期化
   rawInput.addEventListener("input", () => {
     staffSelect.value = ""; 
     lineNameInput.value = "";
@@ -142,7 +147,6 @@
     const lineName = lineNameInput.value.trim();
     const tpl = templates[tIdx];
 
-    // UI制御
     const lineContainer = document.getElementById("lineNameContainer");
     const calContainer = document.getElementById("calOutputContainer");
     let isLineRequired = false;
@@ -153,14 +157,13 @@
         lineContainer.classList.remove("hidden");
         calContainer.classList.remove("hidden");
         isLineRequired = true;
-        document.getElementById("calOutput").value = lineName ? `${tpl.calendar_title}${lineName}` : "";
+        document.getElementById("calOutput").value = lineName ? `${tpl.calendar_title}_${lineName}` : "";
       } else {
         lineContainer.classList.add("hidden");
         calContainer.classList.add("hidden");
       }
     }
 
-    // バリデーション（赤枠表示とコピーボタン制御）
     const isRawOk = rawText !== "";
     const isTplOk = tIdx !== "";
     const isStaffOk = sIdx !== "";
@@ -182,7 +185,6 @@
       return;
     }
 
-    // 生成処理
     let body = tpl.body;
     const staff = staffList[sIdx];
     const data = {
@@ -197,15 +199,23 @@
     document.getElementById("resultOutput").value = body;
   }
 
-  function copyText(id) {
+  // ★アラートなしでボタン文字だけ変えるコピー機能
+  function copyText(id, btnElement) {
     const el = document.getElementById(id);
     if (!el.value) return;
     el.select();
     document.execCommand("copy");
-    const btn = document.activeElement;
-    const originalText = btn.textContent;
-    btn.textContent = "コピー完了";
-    setTimeout(() => btn.textContent = originalText, 1000);
+    
+    const originalText = btnElement.textContent;
+    btnElement.textContent = "完了！";
+    btnElement.style.borderColor = "#52c41a";
+    btnElement.style.color = "#52c41a";
+    
+    setTimeout(() => {
+      btnElement.textContent = originalText;
+      btnElement.style.borderColor = "";
+      btnElement.style.color = "";
+    }, 1000);
   }
 </script>
 </body>
