@@ -2,89 +2,83 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Safe Template Tool - Calendar Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Template Tool</title>
   <style>
-    body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 10px; font-size: 12px; height: 100vh; overflow: hidden; }
+    /* 全体：固定を解除してスクロール可能に */
+    body { font-family: sans-serif; background: #f5f5f5; color: #333; margin: 0; padding: 20px; line-height: 1.6; }
     
-    /* 横幅の調整（左側450px） */
-    .main-grid { display: grid; grid-template-columns: 450px 1fr; gap: 15px; height: 98vh; }
+    /* レイアウト：画面が広いときは2列、狭いときは1列 */
+    .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
     
-    .card { background: white; padding: 15px; border-radius: 6px; display: flex; flex-direction: column; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #ccc; }
-    h3 { margin: 0 0 10px 0; font-size: 13px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    .card { background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    h3 { margin-top: 0; font-size: 16px; border-bottom: 2px solid #eee; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
     
-    .label-tag { font-size: 11px; font-weight: bold; color: #555; margin: 10px 0 4px; display: block; }
-    select, textarea, input { border: 1px solid #bbb; border-radius: 3px; padding: 8px; font-size: 13px; outline: none; width: 100%; box-sizing: border-box; }
+    .label { font-weight: bold; display: block; margin: 15px 0 5px; font-size: 13px; }
+    select, textarea, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
     
-    .required-empty { border: 2px solid #ff4d4f !important; background: #fff1f0; }
+    /* 貼り付けエリアの高さ（盾） */
+    #rawInput { height: 180px; font-family: monospace; }
+    
+    /* 結果表示エリア */
+    #resultOutput { height: 300px; font-family: monospace; background: #fafafa; }
+    #calOutput { background: #eef9ff; font-weight: bold; color: #007bff; }
 
-    /* ★「盾（縦）」の幅を200pxに広げました */
-    #rawInput { height: 200px; flex-grow: 0; font-family: monospace; border: 1px solid #4a90e2; }
-    
-    #resultOutput { flex-grow: 1; resize: none; font-family: monospace; background: #fafafa; border: 2px solid #333; line-height: 1.5; padding: 10px; }
-    
-    .action-row { display: flex; justify-content: flex-end; margin-top: 5px; gap: 8px; align-items: center; }
-    
-    /* カレンダー用：入力欄とボタンを横並びにする */
-    .flex-row { display: flex; gap: 8px; align-items: center; }
-    .flex-row input { flex-grow: 1; }
+    /* ボタン */
+    .btn { cursor: pointer; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; font-size: 12px; transition: 0.2s; }
+    .btn-default { background: #eee; color: #333; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
 
-    .btn { border: none; padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; white-space: nowrap; }
-    .btn-black { background: #111; color: white; }
-    .btn-black:disabled { background: #ccc; cursor: not-allowed; }
-    .btn-outline { background: #fff; color: #4a90e2; border: 1px solid #4a90e2; }
-    .btn-outline:disabled { color: #ccc; border-color: #eee; cursor: not-allowed; }
-    .btn-red { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
-    .btn-red:hover { background: #ff4d4f; color: white; }
-
-    #memoArea { background: #fffbe6; border: 1px solid #ffe58f; padding: 10px; border-radius: 4px; font-size: 11px; color: #856404; margin-top: 10px; min-height: 40px; white-space: pre-wrap; }
+    .flex-row { display: flex; gap: 8px; margin-top: 5px; }
+    .flex-row input { flex: 1; }
+    
+    .memo-box { background: #fffde7; border: 1px solid #fff59d; padding: 10px; border-radius: 4px; font-size: 12px; margin-top: 10px; }
     .hidden { display: none !important; }
+    .required-empty { border: 2px solid #ff4d4f; }
   </style>
 </head>
 <body>
 
-<div class="main-grid">
+<div class="container">
   <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; margin-bottom:10px;">
-      <h3 style="border:none; margin:0;">設定・入力</h3>
-      <button class="btn btn-red" onclick="resetAll()">全項目を初期化</button>
-    </div>
+    <h3>入力設定 <button class="btn btn-danger" onclick="resetAll()">リセット</button></h3>
     
-    <span class="label-tag">1. テンプレート選択</span>
+    <span class="label">1. テンプレート</span>
     <select id="tplSelect"><option value="">読み込み中...</option></select>
     
-    <span class="label-tag">2. 申し込み情報を貼り付け</span>
-    <textarea id="rawInput" placeholder="情報をペーストしてください"></textarea>
-    <div class="action-row">
-      <button id="copyRawBtn" class="btn btn-outline" onclick="copyText('rawInput', this)" disabled>内容をコピー</button>
+    <span class="label">2. 申し込み情報</span>
+    <textarea id="rawInput" placeholder="情報を貼り付けてください"></textarea>
+    <div class="flex-row">
+      <button id="copyRawBtn" class="btn btn-default" onclick="copyText('rawInput', this)" disabled>内容をコピー</button>
     </div>
     
-    <span class="label-tag">3. セールス担当選択</span>
+    <span class="label">3. セールス担当</span>
     <select id="staffSelect"><option value="">選択してください</option></select>
 
     <div id="lineNameContainer" class="hidden">
-      <span class="label-tag">4. お客様のLINE名を入力 (必須)</span>
+      <span class="label">4. お客様のLINE名 (必須)</span>
       <input type="text" id="lineNameInput" placeholder="例：田中太郎">
     </div>
 
-    <span class="label-tag">その他メモ</span>
-    <div id="memoArea">テンプレートを選択してください</div>
+    <div id="memoArea" class="memo-box">テンプレートを選択してください</div>
   </div>
 
   <div class="card">
     <div id="calOutputContainer" class="hidden">
-      <h3>カレンダータイトル用</h3>
+      <h3>カレンダータイトル</h3>
       <div class="flex-row">
-        <input type="text" id="calOutput" readonly style="background:#e6f7ff; font-weight:bold;">
-        <button id="copyCalBtn" class="btn btn-outline" onclick="copyText('calOutput', this)">コピー</button>
+        <input type="text" id="calOutput" readonly>
+        <button id="copyCalBtn" class="btn btn-primary" onclick="copyText('calOutput', this)">コピー</button>
       </div>
-      <hr style="width:100%; border:0; border-top:1px solid #eee; margin:15px 0;">
     </div>
 
-    <h3>生成結果（本文）</h3>
-    <textarea id="resultOutput" readonly placeholder="すべての項目を正しく入力・選択してください"></textarea>
-    <div class="action-row">
-      <span id="statusMsg" style="color:#ff4d4f; font-size:10px; font-weight:bold;"></span>
-      <button id="copyResultBtn" class="btn btn-black" onclick="copyText('resultOutput', this)" disabled>本文をコピー</button>
+    <h3>生成結果</h3>
+    <textarea id="resultOutput" readonly placeholder="すべての項目を入力してください"></textarea>
+    <div class="flex-row" style="justify-content: flex-end; margin-top: 10px;">
+      <span id="statusMsg" style="color:red; font-size:11px; margin-right: 10px;"></span>
+      <button id="copyResultBtn" class="btn btn-primary" onclick="copyText('resultOutput', this)" disabled style="padding: 12px 24px;">本文をコピー</button>
     </div>
   </div>
 </div>
@@ -106,9 +100,10 @@
       staffList = resStaff;
       document.getElementById("tplSelect").innerHTML = '<option value="">選択してください</option>' + 
         templates.map((t, i) => `<option value="${i}">${t.template_name}</option>`).join('');
-      initStaffSelect();
+      document.getElementById("staffSelect").innerHTML = '<option value="">選択してください</option>' + 
+        staffList.map((s, i) => `<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
       update();
-    } catch (e) { alert("データ取得エラー"); }
+    } catch (e) { alert("データの読み込みに失敗しました。"); }
   };
 
   const rawInput = document.getElementById("rawInput");
@@ -116,6 +111,7 @@
   const staffSelect = document.getElementById("staffSelect");
   const lineNameInput = document.getElementById("lineNameInput");
 
+  // 入力が変わったらリセット
   rawInput.addEventListener("input", () => {
     staffSelect.value = ""; 
     lineNameInput.value = "";
@@ -125,17 +121,9 @@
   staffSelect.addEventListener("change", update);
   lineNameInput.addEventListener("input", update);
 
-  function initStaffSelect() {
-    staffSelect.innerHTML = '<option value="">選択してください</option>' + 
-      staffList.map((s, i) => `<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
-  }
-
   function resetAll() {
-    if(confirm("すべての入力を消去して初期化しますか？")) {
-      rawInput.value = "";
-      tplSelect.value = "";
-      staffSelect.value = "";
-      lineNameInput.value = "";
+    if(confirm("すべてクリアしますか？")) {
+      rawInput.value = ""; tplSelect.value = ""; staffSelect.value = ""; lineNameInput.value = "";
       update();
     }
   }
@@ -159,11 +147,11 @@
         isLineRequired = true;
         document.getElementById("calOutput").value = lineName ? `${tpl.calendar_title}_${lineName}` : "";
       } else {
-        lineContainer.classList.add("hidden");
-        calContainer.classList.add("hidden");
+        lineContainer.classList.add("hidden"); calContainer.classList.add("hidden");
       }
     }
 
+    // バリデーション
     const isRawOk = rawText !== "";
     const isTplOk = tIdx !== "";
     const isStaffOk = sIdx !== "";
@@ -171,20 +159,14 @@
 
     document.getElementById("copyRawBtn").disabled = !isRawOk;
     rawInput.classList.toggle("required-empty", !isRawOk && (isTplOk || isStaffOk));
-    tplSelect.classList.toggle("required-empty", !isTplOk && isRawOk);
-    staffSelect.classList.toggle("required-empty", !isStaffOk && isRawOk);
-    lineNameInput.classList.toggle("required-empty", isLineRequired && !isLineOk);
-
+    
     const allOk = isRawOk && isTplOk && isStaffOk && isLineOk;
-    const copyResultBtn = document.getElementById("copyResultBtn");
-    copyResultBtn.disabled = !allOk;
-    document.getElementById("statusMsg").innerText = allOk ? "" : "※未入力項目があります";
+    document.getElementById("copyResultBtn").disabled = !allOk;
+    document.getElementById("statusMsg").innerText = allOk ? "" : "※未入力あり";
 
-    if (!allOk) {
-      document.getElementById("resultOutput").value = "";
-      return;
-    }
+    if (!allOk) { document.getElementById("resultOutput").value = ""; return; }
 
+    // 生成
     let body = tpl.body;
     const staff = staffList[sIdx];
     const data = {
@@ -199,23 +181,15 @@
     document.getElementById("resultOutput").value = body;
   }
 
-  // ★アラートなしでボタン文字だけ変えるコピー機能
-  function copyText(id, btnElement) {
+  function copyText(id, btn) {
     const el = document.getElementById(id);
     if (!el.value) return;
     el.select();
     document.execCommand("copy");
-    
-    const originalText = btnElement.textContent;
-    btnElement.textContent = "完了！";
-    btnElement.style.borderColor = "#52c41a";
-    btnElement.style.color = "#52c41a";
-    
-    setTimeout(() => {
-      btnElement.textContent = originalText;
-      btnElement.style.borderColor = "";
-      btnElement.style.color = "";
-    }, 1000);
+    const oldText = btn.textContent;
+    btn.textContent = "完了";
+    btn.style.background = "#28a745";
+    setTimeout(() => { btn.textContent = oldText; btn.style.background = ""; }, 1000);
   }
 </script>
 </body>
