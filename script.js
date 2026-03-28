@@ -1,30 +1,51 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzEl7xsmRf765t1ejf-JSjosRJAByBiZ4cqsmpDgMWkrczUGcpuXQg5WcYajr_nJ-Hx/exec";
+const API_URL = "https://script.google.com/macros/s/XXXXXXXXXXXX/exec";
 
 let templates = [];
 let currentTemplate = null;
 
-document.addEventListener("DOMContentLoaded", async () => {
-  document.getElementById("templateSelect").addEventListener("change", onTemplateChange);
-  document.getElementById("copyButton").addEventListener("click", copyOutputText);
+const els = {
+  templateSelect: document.getElementById("templateSelect"),
+  templateMeta: document.getElementById("templateMeta"),
+  parserSection: document.getElementById("parserSection"),
+  formPasteText: document.getElementById("formPasteText"),
+  parseButton: document.getElementById("parseButton"),
+  fieldsContainer: document.getElementById("fieldsContainer"),
+  outputText: document.getElementById("outputText"),
+  copyButton: document.getElementById("copyButton"),
+  clearButton: document.getElementById("clearButton"),
+};
 
+document.addEventListener("DOMContentLoaded", async () => {
+  bindEvents();
   await loadTemplates();
 });
+
+function bindEvents() {
+  els.templateSelect.addEventListener("change", onTemplateChange);
+  els.parseButton.addEventListener("click", handleAutoFill);
+  els.copyButton.addEventListener("click", copyOutputText);
+  els.clearButton.addEventListener("click", clearInputs);
+}
 
 async function loadTemplates() {
   try {
     const res = await fetch(API_URL);
-    const data = await res.json();
-    templates = data || [];
+    const json = await res.json();
+
+    if (!json.success) {
+      throw new Error(json.message || "テンプレートの取得に失敗しました");
+    }
+
+    templates = json.templates || [];
     renderTemplateOptions();
   } catch (error) {
     console.error(error);
-    alert("テンプレートの読み込みに失敗しました");
+    alert("テンプレートの読み込みに失敗しました。\nApps Script の公開設定や API_URL を確認してください。");
   }
 }
 
 function renderTemplateOptions() {
-  const select = document.getElementById("templateSelect");
-  select.innerHTML = '<option value="">選択してください</option>';
+  els.templateSelect.innerHTML = '<option value="">選択してください</option>';
 
   templates.forEach(template => {
     const option = document.createElement("option");
@@ -32,38 +53,56 @@ function renderTemplateOptions() {
     option.textContent = template.category
       ? `${template.name}（${template.category}）`
       : template.name;
-    select.appendChild(option);
+    els.templateSelect.appendChild(option);
   });
 }
 
-function onTemplateChange(e) {
-  const templateId = e.target.value;
+function onTemplateChange(event) {
+  const templateId = event.target.value;
   currentTemplate = templates.find(t => t.id === templateId) || null;
 
+  resetFormArea();
+
   if (!currentTemplate) {
-    document.getElementById("fieldsContainer").innerHTML = "";
-    document.getElementById("outputText").value = "";
     return;
   }
 
-  renderFields(currentTemplate.fields);
+  renderTemplateMeta();
+  renderFields(currentTemplate.fields || []);
+  updateParserSection();
   updateOutput();
 }
 
-function renderFields(fields) {
-  const container = document.getElementById("fieldsContainer");
-  container.innerHTML = "";
+function renderTemplateMeta() {
+  const parts = [];
+  if (currentTemplate?.id) parts.push(`ID: ${currentTemplate.id}`);
+  if (currentTemplate?.category) parts.push(`カテゴリ: ${currentTemplate.category}`);
+  els.templateMeta.textContent = parts.join(" / ");
+}
 
-  if (!fields || fields.length === 0) {
-    container.innerHTML = '<p class="empty-message">入力項目がありません。</p>';
+function resetFormArea() {
+  els.templateMeta.textContent = "";
+  els.fieldsContainer.innerHTML = "";
+  els.outputText.value = "";
+  els.formPasteText.value = "";
+  els.parserSection.classList.add("hidden");
+}
+
+function renderFields(fields) {
+  els.fieldsContainer.innerHTML = "";
+
+  if (!fields.length) {
+    els.fieldsContainer.innerHTML = '<p class="empty-message">入力項目がありません。</p>';
     return;
   }
 
   fields.forEach(field => {
     const wrapper = document.createElement("div");
+    wrapper.className = "field-group";
 
     const label = document.createElement("label");
-    label.textContent = field.label;
+    label.htmlFor = `field-${field.key}`;
+    label.textContent = field.label || field.key;
 
     if (field.required) {
       const required = document.createElement("span");
@@ -78,9 +117,10 @@ function renderFields(fields) {
       input.rows = 3;
     } else {
       input = document.createElement("input");
-      input.type = field.inputType || "text";
+      input.type = normalizeInputType(field.inputType);
     }
 
+    input.id = `field-${field.key}`;
     input.dataset.key = field.key;
     input.placeholder = field.placeholder || "";
     input.value = field.defaultValue || "";
@@ -88,13 +128,35 @@ function renderFields(fields) {
 
     wrapper.appendChild(label);
     wrapper.appendChild(input);
-    container.appendChild(wrapper);
+    els.fieldsContainer.appendChild(wrapper);
   });
 }
 
-function updateOutput() {
-  if (!currentTemplate) return;
+function normalizeInputType(type) {
+  const allowed = ["text", "url", "email", "number", "date"];
+  return allowed.includes(type) ? type : "text";
+}
 
+function updateParserSection() {
+  if (currentTemplate?.enableFormParser) {
+    els.parserSection.classList.remove("hidden");
+  } else {
+    els.parserSection.classList.add("hidden");
+  }
+}
+
+function updateOutput() {
+  if (!currentTemplate) {
+    els.outputText.value = "";
+    return;
+  }
+
+  const values = collectInputValues();
+  const result = replaceTemplate(currentTemplate.body || "", values);
+  els.outputText.value = result;
+}
+
+function collectInputValues() {
   const values = {};
   const inputs = document.querySelectorAll("[data-key]");
 
@@ -102,8 +164,7 @@ function updateOutput() {
     values[input.dataset.key] = input.value || "";
   });
 
-  const result = replaceTemplate(currentTemplate.body, values);
-  document.getElementById("outputText").value = result;
+  return values;
 }
 
 function replaceTemplate(templateBody, values) {
@@ -122,10 +183,22 @@ function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-async function copyOutputText() {
-  const output = document.getElementById("outputText").value;
+function clearInputs() {
+  if (!currentTemplate) return;
 
-  if (!output) {
+  const inputs = document.querySelectorAll("[data-key]");
+  inputs.forEach(input => {
+    input.value = "";
+  });
+
+  els.formPasteText.value = "";
+  updateOutput();
+}
+
+async function copyOutputText() {
+  const output = els.outputText.value;
+
+  if (!output.trim()) {
     alert("コピーするテキストがありません");
     return;
   }
@@ -146,4 +219,60 @@ function fallbackCopy(text) {
   document.execCommand("copy");
   document.body.removeChild(textarea);
   alert("コピーしました");
+}
+
+function handleAutoFill() {
+  if (!currentTemplate) {
+    alert("先にテンプレートを選択してください");
+    return;
+  }
+
+  if (!currentTemplate.enableFormParser) {
+    alert("このテンプレートでは自動入力は使えません");
+    return;
+  }
+
+  const rawText = els.formPasteText.value.trim();
+  if (!rawText) {
+    alert("申し込みフォーム本文を貼り付けてください");
+    return;
+  }
+
+  const parsed = runParser(currentTemplate.parserType, rawText);
+  applyParsedValues(parsed, currentTemplate.autoFillFields || []);
+  updateOutput();
+}
+
+function runParser(parserType, text) {
+  switch (parserType) {
+    case "utage_basic":
+      return parseUtageBasic(text);
+    default:
+      return {};
+  }
+}
+
+function parseUtageBasic(text) {
+  return {
+    eventName: extractValue(text, /■イベント名：([^\n\r]+)/),
+    eventDate: extractValue(text, /■日程：([^\n\r]+)/),
+    userName: extractValue(text, /■お名前：([^\n\r]+)/),
+  };
+}
+
+function extractValue(text, regex) {
+  const match = text.match(regex);
+  return match ? match[1].trim() : "";
+}
+
+function applyParsedValues(parsed, allowedFields) {
+  const allowedSet = new Set(allowedFields);
+  const inputs = document.querySelectorAll("[data-key]");
+
+  inputs.forEach(input => {
+    const key = input.dataset.key;
+    if (allowedSet.has(key) && parsed[key]) {
+      input.value = parsed[key];
+    }
+  });
 }
