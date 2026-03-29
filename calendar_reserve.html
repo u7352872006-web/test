@@ -15,7 +15,7 @@
     select, textarea, input { width: 100%; box-sizing: border-box; padding: 6px; margin-top: 4px; border: 1px solid #999; font-size: 14px; }
     #rawInput { height: 120px; }
     #resultOutput { flex-grow: 1; height: 250px; background: #fff; font-family: monospace; }
-    #threadOutput { height: 100px; background: #fff; font-family: monospace; }
+    #threadOutput { height: 80px; background: #fff; font-family: monospace; }
     .flex-row { display: flex; gap: 5px; margin-top: 4px; }
     .flex-row input { flex: 1; }
     .btn-copy { cursor: pointer; padding: 5px 10px; background: #eee; border: 1px solid #999; font-size: 11px; white-space: nowrap; border-radius: 3px; }
@@ -104,21 +104,23 @@
           selectedCalBase = document.getElementById("calTitleSelect").value;
     const tpl = templates[tIdx], staff = staffList[sIdx];
     
-    // カレンダータイトル制御
+    const extractedName = (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim();
+
+    // カレンダータイトル
     if (tpl && tpl.calendar_title) {
       document.getElementById("calBox").classList.remove("hidden");
-      document.getElementById("calOutput").value = selectedCalBase ? `${selectedCalBase}${lineName}` : "";
+      document.getElementById("calOutput").value = selectedCalBase ? `${selectedCalBase}_${lineName}` : "";
     } else { document.getElementById("calBox").classList.add("hidden"); }
 
-    // スレッド制御
+    // スレッド制御（値がある場合のみ出力）
     const threadBox = document.getElementById("threadBox");
     if (tpl && tpl.thread && tpl.thread.trim() !== "") {
       threadBox.classList.remove("hidden");
-      let threadText = tpl.thread;
-      const data = { userName: (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim() };
-      threadText = threadText.split('${userName}').join(data.userName);
-      document.getElementById("threadOutput").value = threadText;
-    } else { threadBox.classList.add("hidden"); }
+      // 指定の形式：【LINE名_アポ振りスレッド】
+      document.getElementById("threadOutput").value = `【${lineName}_アポ振りスレッド】`;
+    } else {
+      threadBox.classList.add("hidden");
+    }
     
     const isCalTitleSelected = (tpl && tpl.calendar_title) ? selectedCalBase !== "" : true;
     const allOk = (tIdx !== "" && sIdx !== "" && lineName !== "" && rawText !== "" && isCalTitleSelected);
@@ -127,7 +129,7 @@
     if (allOk) {
       let body = tpl.body;
       const data = {
-        userName: (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim(),
+        userName: extractedName,
         eventDate: (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim(),
         eventName: (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim(),
         zoomLink: staff.zoom || "", memo: tpl.memo || ""
