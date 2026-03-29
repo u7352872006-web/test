@@ -104,7 +104,15 @@
           selectedCalBase = document.getElementById("calTitleSelect").value;
     const tpl = templates[tIdx], staff = staffList[sIdx];
     
-    const extractedName = (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim();
+    // 抽出ロジック
+    const extractedUserName = (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim();
+    
+    // 【修正箇所】eventNameの抽出と切り落とし
+    let extractedEventName = (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim();
+    if (extractedEventName) {
+      // 「（」または「_」のいずれか早い方の位置で分割し、その前を採用
+      extractedEventName = extractedEventName.split(/[（_]/)[0].trim();
+    }
 
     // カレンダータイトル
     if (tpl && tpl.calendar_title) {
@@ -112,15 +120,12 @@
       document.getElementById("calOutput").value = selectedCalBase ? `${selectedCalBase}_${lineName}` : "";
     } else { document.getElementById("calBox").classList.add("hidden"); }
 
-    // スレッド制御（値がある場合のみ出力）
+    // スレッド
     const threadBox = document.getElementById("threadBox");
     if (tpl && tpl.thread && tpl.thread.trim() !== "") {
       threadBox.classList.remove("hidden");
-      // 指定の形式：【LINE名_アポ振りスレッド】
       document.getElementById("threadOutput").value = `【${lineName}_アポ振りスレッド】`;
-    } else {
-      threadBox.classList.add("hidden");
-    }
+    } else { threadBox.classList.add("hidden"); }
     
     const isCalTitleSelected = (tpl && tpl.calendar_title) ? selectedCalBase !== "" : true;
     const allOk = (tIdx !== "" && sIdx !== "" && lineName !== "" && rawText !== "" && isCalTitleSelected);
@@ -129,9 +134,9 @@
     if (allOk) {
       let body = tpl.body;
       const data = {
-        userName: extractedName,
+        userName: extractedUserName,
         eventDate: (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim(),
-        eventName: (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim(),
+        eventName: extractedEventName,
         zoomLink: staff.zoom || "", memo: tpl.memo || ""
       };
       Object.keys(data).forEach(k => body = body.split(`\${${k}}`).join(data[k]));
