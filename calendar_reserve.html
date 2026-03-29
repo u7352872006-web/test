@@ -13,22 +13,13 @@
     .btn-small { cursor: pointer; font-size: 10px; padding: 2px 5px; background: #eee; border: 1px solid #ccc; border-radius: 3px; }
     .label { font-weight: bold; display: block; margin-top: 10px; }
     select, textarea, input { width: 100%; box-sizing: border-box; padding: 6px; margin-top: 4px; border: 1px solid #999; font-size: 14px; }
-    
-    /* 入力エリアの高さ */
-    #rawInput { height: 120px; }
-    #memoInput { height: 80px; background: #fffde7; } /* メモは少し色を変えて区別 */
-    
-    /* 出力エリアの高さ */
-    #resultOutput { flex-grow: 1; height: 250px; background: #fff; font-family: monospace; }
-    
+    #rawInput { height: 150px; }
+    #resultOutput { flex-grow: 1; height: 300px; background: #fff; font-family: monospace; }
     .flex-row { display: flex; gap: 5px; margin-top: 4px; }
     .flex-row input { flex: 1; }
     .btn-copy { cursor: pointer; padding: 5px 10px; background: #eee; border: 1px solid #999; font-size: 11px; white-space: nowrap; border-radius: 3px; }
-    .btn-copy:hover { background: #e0e0e0; }
-    
     .btn-main { cursor: pointer; padding: 12px; width: 100%; margin-top: 10px; background: #333; color: #fff; border: none; font-weight: bold; border-radius: 4px; }
     .btn-main:disabled { background: #ccc; cursor: not-allowed; }
-    
     .hidden { display: none !important; }
     @media (max-width: 700px) { .container { flex-direction: column; } }
   </style>
@@ -41,16 +32,13 @@
   <div class="panel">
     <div class="header-row">
       <strong>【入力エリア】</strong>
-      <button class="btn-small" onclick="clearAllData()">すべての入力をクリア</button>
+      <button class="btn-small" onclick="clearAllData()">クリア</button>
     </div>
-
     <span class="label">1. テンプレート選択</span>
     <select id="tplSelect"><option value="">読込中...</option></select>
     
     <span class="label">2. 申し込み情報</span>
-    <div class="flex-row">
-      <textarea id="rawInput" placeholder="ここに申し込みメール等を貼り付け"></textarea>
-    </div>
+    <textarea id="rawInput" placeholder="ここに貼り付け"></textarea>
     <div class="flex-row" style="justify-content: flex-end;">
       <button class="btn-copy" onclick="copyText('rawInput')">申し込み情報をコピー</button>
     </div>
@@ -60,28 +48,21 @@
     
     <span class="label">4. セールス担当</span>
     <select id="staffSelect"></select>
-
-    <span class="label">5. メモ (自分用)</span>
-    <textarea id="memoInput" placeholder="自由なメモ書きに。これも保存されます"></textarea>
   </div>
 
   <div class="panel">
-    <div class="header-row"><strong>【出力結果】</strong></div>
-    
+    <strong>【出力結果】</strong>
     <div id="calBox" class="hidden">
       <span class="label">カレンダータイトル種別</span>
       <select id="calTitleSelect"></select>
-      
-      <span class="label">カレンダー用コピータイトル（編集可）</span>
+      <span class="label">コピー用タイトル（編集可）</span>
       <div class="flex-row">
         <input type="text" id="calOutput">
         <button class="btn-copy" onclick="copyText('calOutput')">コピー</button>
       </div>
     </div>
-
-    <span class="label">生成された本文（自由に編集できます）</span>
-    <textarea id="resultOutput" placeholder="入力が完了するとここに自動生成されます"></textarea>
-    
+    <span class="label">生成された本文（編集可）</span>
+    <textarea id="resultOutput"></textarea>
     <button id="mainCopyBtn" class="btn-main" onclick="copyText('resultOutput')" disabled>本文をコピーする</button>
   </div>
 </div>
@@ -91,41 +72,22 @@
   const STAFF_API = "https://script.google.com/macros/s/AKfycbySHVscjhTYWKf8bLJUGIMJ7AArbsp8cS8wl0O8FyYjYoO2mRzMO8jZhcc_cmhDvYfIhA/exec";
   
   let templates = [], staffList = [];
-
-  // 監視・保存対象のIDリスト
-  const fields = ["tplSelect", "rawInput", "lineNameInput", "staffSelect", "calTitleSelect", "memoInput"];
+  const fields = ["tplSelect", "rawInput", "lineNameInput", "staffSelect", "calTitleSelect"];
 
   window.onload = async () => {
     try {
-      const [r1, r2] = await Promise.all([
-        fetch(TPL_API).then(r => r.json()),
-        fetch(STAFF_API).then(r => r.json())
-      ]);
-      templates = r1;
-      staffList = r2;
-
-      // プルダウン初期化
-      document.getElementById("tplSelect").innerHTML = '<option value="">選択してください</option>' + 
-        templates.map((t, i) => `<option value="${i}">${t.template_name}</option>`).join('');
-      
-      document.getElementById("staffSelect").innerHTML = '<option value="">選択してください</option>' + 
-        staffList.map((s, i) => `<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
-
-      // データ復元
+      const [r1, r2] = await Promise.all([fetch(TPL_API).then(r=>r.json()), fetch(STAFF_API).then(r=>r.json())]);
+      templates = r1; staffList = r2;
+      document.getElementById("tplSelect").innerHTML = '<option value="">選択してください</option>' + templates.map((t,i)=>`<option value="${i}">${t.template_name}</option>`).join('');
+      document.getElementById("staffSelect").innerHTML = '<option value="">選択してください</option>' + staffList.map((s,i)=>`<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
       restoreData();
       update();
-    } catch (e) {
-      console.error("データの読み込みに失敗しました", e);
-    }
+    } catch (e) { console.error(e); }
   };
 
-  // 各入力欄へのイベント設定
   fields.forEach(id => {
-    const el = document.getElementById(id);
-    const eventType = el.tagName === "SELECT" ? "change" : "input";
-    
-    el.addEventListener(eventType, () => {
-      localStorage.setItem('cr_' + id, el.value);
+    document.getElementById(id).addEventListener("input", () => {
+      localStorage.setItem('cr_' + id, document.getElementById(id).value);
       if(id === "tplSelect") setupCalTitleSelect();
       update();
     });
@@ -135,12 +97,29 @@
     const tIdx = document.getElementById("tplSelect").value;
     const calSelect = document.getElementById("calTitleSelect");
     calSelect.innerHTML = "";
-
     if (tIdx !== "" && templates[tIdx].calendar_title) {
       const titles = templates[tIdx].calendar_title.split(',');
+      
+      // 2つ以上ある場合のみ「選択してください」を追加
+      if (titles.length > 1) {
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "-- タイトルを選択してください --";
+        calSelect.appendChild(placeholder);
+      }
+
       titles.forEach(t => {
+        const item = t.trim();
         const opt = document.createElement("option");
-        opt.value = t.trim(); opt.textContent = t.trim();
+        // 「表示名:コピー用」のペア処理
+        if (item.includes(":")) {
+          const parts = item.split(":");
+          opt.textContent = parts[0].trim();
+          opt.value = parts[1].trim();
+        } else {
+          opt.textContent = item;
+          opt.value = item;
+        }
         calSelect.appendChild(opt);
       });
       const saved = localStorage.getItem('cr_calTitleSelect');
@@ -157,26 +136,24 @@
   }
 
   function update() {
-    const tIdx = document.getElementById("tplSelect").value;
-    const sIdx = document.getElementById("staffSelect").value;
-    const lineName = document.getElementById("lineNameInput").value.trim();
-    const rawText = document.getElementById("rawInput").value.trim();
-    const selectedCalBase = document.getElementById("calTitleSelect").value;
+    const tIdx = document.getElementById("tplSelect").value, sIdx = document.getElementById("staffSelect").value,
+          lineName = document.getElementById("lineNameInput").value.trim(), rawText = document.getElementById("rawInput").value.trim(),
+          selectedCalBase = document.getElementById("calTitleSelect").value;
+    const tpl = templates[tIdx], staff = staffList[sIdx];
     
-    const tpl = templates[tIdx];
-    const staff = staffList[sIdx];
-    
-    // カレンダータイトル表示制御
     const calBox = document.getElementById("calBox");
     if (tpl && tpl.calendar_title) {
       calBox.classList.remove("hidden");
-      document.getElementById("calOutput").value = `${selectedCalBase}_${lineName}`;
+      // タイトルが未選択（ガイド文のまま）なら空にする
+      document.getElementById("calOutput").value = selectedCalBase ? `${selectedCalBase}_${lineName}` : "";
     } else {
       calBox.classList.add("hidden");
     }
     
-    // 本文生成
-    const allOk = (tIdx !== "" && sIdx !== "" && lineName !== "" && rawText !== "");
+    // 全項目（テンプレート、担当者、LINE名、申し込み情報、カレンダータイトル選択済み）が揃っているか
+    const isCalTitleSelected = (tpl && tpl.calendar_title) ? selectedCalBase !== "" : true;
+    const allOk = (tIdx !== "" && sIdx !== "" && lineName !== "" && rawText !== "" && isCalTitleSelected);
+    
     document.getElementById("mainCopyBtn").disabled = !allOk;
     
     if (allOk) {
@@ -185,31 +162,18 @@
         userName: (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim(),
         eventDate: (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim(),
         eventName: (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim(),
-        zoomLink: staff.zoom || "" 
+        zoomLink: staff.zoom || "",
+        memo: tpl.memo || ""
       };
-      Object.keys(data).forEach(k => {
-        body = body.split(`\${${k}}`).join(data[k]);
-      });
+      Object.keys(data).forEach(k => body = body.split(`\${${k}}`).join(data[k]));
       document.getElementById("resultOutput").value = body;
     } else {
-      // 完全に消去せず、前回の編集内容を残したい場合はここを空にしない運用も可能です
+      document.getElementById("resultOutput").value = "";
     }
   }
 
-  function copyText(id) {
-    const el = document.getElementById(id);
-    el.select();
-    document.execCommand("copy");
-    // コピーしたことがわかるように簡易アラート（お好みで）
-    // alert("コピーしました");
-  }
-
-  function clearAllData() {
-    if (confirm("メモを含むすべての入力を消去してリセットしますか？")) {
-      fields.forEach(id => localStorage.removeItem('cr_' + id));
-      location.reload();
-    }
-  }
+  function copyText(id) { const el = document.getElementById(id); el.select(); document.execCommand("copy"); }
+  function clearAllData() { if (confirm("クリアしますか？")) { fields.forEach(id => localStorage.removeItem('cr_' + id)); location.reload(); } }
 </script>
 </body>
 </html>
