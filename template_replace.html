@@ -2,14 +2,11 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>テンプレート置き換え</title>
   <style>
     body { font-family: sans-serif; margin: 0; padding: 10px; font-size: 13px; color: #333; }
-    /* 戻るボタンのスタイル */
     .nav { margin-bottom: 10px; }
-    .nav a { text-decoration: none; color: #007bff; font-size: 12px; font-weight: bold; }
-    
+    .nav a { text-decoration: none; color: #007bff; font-weight: bold; }
     .container { max-width: 950px; margin: 0 auto; display: flex; gap: 15px; }
     .panel { flex: 1; border: 1px solid #ccc; padding: 12px; display: flex; flex-direction: column; min-width: 0; }
     .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
@@ -25,15 +22,13 @@
 </head>
 <body>
 
-<div class="nav">
-  <a href="index.html">← インデックスに戻る</a>
-</div>
+<div class="nav"><a href="index.html">← インデックスに戻る</a></div>
 
 <div class="container">
   <div class="panel">
     <div class="header-row">
       <strong>【設定・入力】</strong>
-      <button class="btn-reset" onclick="location.reload()">クリア</button>
+      <button class="btn-reset" onclick="clearAllData()">クリア</button>
     </div>
     <span class="label">1. テンプレート選択</span>
     <select id="tplSelect" onchange="generateInputs()"><option value="">読み込み中...</option></select>
@@ -49,7 +44,6 @@
 </div>
 
 <script>
-  // あなたがデプロイしたURL
   const API_URL = "https://script.google.com/macros/s/AKfycbwMt-RMzTgSkAAcB3Xv0FC5LPeOJ8xWN-eyLydAdG4FG12_7xfHY7PzsbguuyAVOJv8/exec"; 
   let templates = [];
 
@@ -60,32 +54,67 @@
       const select = document.getElementById("tplSelect");
       select.innerHTML = '<option value="">選択してください</option>' + 
         templates.map((t, i) => `<option value="${i}">${t.title}</option>`).join('');
+
+      // 保存されていたテンプレート選択を復元
+      const savedTplIdx = localStorage.getItem('tr_tplIdx');
+      if (savedTplIdx !== null) {
+        select.value = savedTplIdx;
+        generateInputs(true); // 復元時は保存データも読み込む
+      }
     } catch (e) {
       document.getElementById("tplSelect").innerHTML = '<option value="">読込失敗</option>';
     }
   };
 
-  function generateInputs() {
+  function generateInputs(isRestore = false) {
     const idx = document.getElementById("tplSelect").value;
     const container = document.getElementById("dynamicInputs");
     container.innerHTML = "";
     document.getElementById("resultOutput").value = "";
     document.getElementById("copyBtn").disabled = true;
-    if (idx === "") return;
+
+    if (idx === "") {
+      localStorage.removeItem('tr_tplIdx');
+      return;
+    }
+
+    // 選択されたテンプレートのインデックスを保存
+    localStorage.setItem('tr_tplIdx', idx);
 
     const fields = templates[idx].fields.split(',');
     const guides = templates[idx].placeholders ? templates[idx].placeholders.split(',') : [];
 
     fields.forEach((field, i) => {
-      if(!field.trim()) return;
+      const fieldName = field.trim();
+      if(!fieldName) return;
+
       const div = document.createElement("div");
       div.className = "input-box";
       const placeholderText = guides[i] ? guides[i].trim() : "";
-      div.innerHTML = `<span class="label">${field.trim()}</span>
-                       <input type="text" class="field-input" data-key="${field.trim()}" 
-                        placeholder="${placeholderText}" oninput="validateAndRender()">`;
+      
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "field-input";
+      input.dataset.key = fieldName;
+      input.placeholder = placeholderText;
+
+      // 復元モードならLocalStorageから値を読み込む
+      if (isRestore) {
+        input.value = localStorage.getItem(`tr_field_${idx}_${fieldName}`) || "";
+      }
+
+      // 入力のたびに保存
+      input.oninput = () => {
+        localStorage.setItem(`tr_field_${idx}_${fieldName}`, input.value);
+        validateAndRender();
+      };
+
+      div.innerHTML = `<span class="label">${fieldName}</span>`;
+      div.appendChild(input);
       container.appendChild(div);
     });
+
+    if (isRestore) validateAndRender();
   }
 
   function validateAndRender() {
@@ -93,6 +122,7 @@
     const inputs = document.querySelectorAll(".field-input");
     const resultArea = document.getElementById("resultOutput");
     const copyBtn = document.getElementById("copyBtn");
+
     if (idx === "" || inputs.length === 0) return;
 
     let allFilled = true;
@@ -116,6 +146,16 @@
     const el = document.getElementById("resultOutput");
     el.select();
     document.execCommand("copy");
+  }
+
+  function clearAllData() {
+    if (confirm("入力をすべてクリアしますか？")) {
+      // tr_ で始まるLocalStorageをすべて削除
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('tr_')) localStorage.removeItem(key);
+      });
+      location.reload();
+    }
   }
 </script>
 </body>
