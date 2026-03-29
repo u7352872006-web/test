@@ -4,25 +4,56 @@
   <meta charset="UTF-8">
   <title>カレンダー予約ツール</title>
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 10px; font-size: 13px; color: #333; }
+    body { font-family: sans-serif; margin: 0; padding: 10px; font-size: 12px; color: #333; background-color: #f5f5f5; }
     .nav { margin-bottom: 10px; }
     .nav a { text-decoration: none; color: #007bff; font-weight: bold; }
-    .container { max-width: 950px; margin: 0 auto; display: flex; gap: 15px; }
-    .panel { flex: 1; border: 1px solid #ccc; padding: 10px; display: flex; flex-direction: column; min-width: 0; }
-    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-    .btn-small { cursor: pointer; font-size: 10px; padding: 2px 5px; background: #eee; border: 1px solid #ccc; border-radius: 3px; }
-    .label { font-weight: bold; display: block; margin-top: 10px; }
-    select, textarea, input { width: 100%; box-sizing: border-box; padding: 6px; margin-top: 4px; border: 1px solid #999; font-size: 14px; }
+    
+    /* 3分割レイアウト */
+    .container { display: flex; gap: 10px; align-items: stretch; min-height: 85vh; }
+    .panel { 
+      flex: 1; 
+      border: 1px solid #ccc; 
+      padding: 12px; 
+      display: flex; 
+      flex-direction: column; 
+      background-color: #fff; 
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    /* 作業ガイド（右パネル）の装飾 */
+    .guide-panel { background-color: #fffde7; border-color: #ffe082; }
+    #guideContent { 
+      white-space: pre-wrap; 
+      font-size: 13px; 
+      line-height: 1.5; 
+      padding: 10px; 
+      border: 1px dashed #decb00; 
+      flex-grow: 1; 
+      overflow-y: auto; 
+    }
+
+    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    .btn-small { cursor: pointer; font-size: 10px; padding: 3px 8px; background: #eee; border: 1px solid #ccc; border-radius: 3px; }
+    .label { font-weight: bold; display: block; margin-top: 10px; color: #555; }
+    
+    select, textarea, input { width: 100%; box-sizing: border-box; padding: 8px; margin-top: 4px; border: 1px solid #bbb; font-size: 14px; border-radius: 3px; }
+    textarea { resize: vertical; }
+    
     #rawInput { height: 120px; }
-    #resultOutput { flex-grow: 1; height: 250px; background: #fff; font-family: monospace; }
-    #threadOutput { height: 80px; background: #fff; font-family: monospace; }
+    #resultOutput { flex-grow: 1; min-height: 200px; font-family: monospace; }
+    #threadOutput { height: 60px; font-family: monospace; }
+    
     .flex-row { display: flex; gap: 5px; margin-top: 4px; }
     .flex-row input { flex: 1; }
-    .btn-copy { cursor: pointer; padding: 5px 10px; background: #eee; border: 1px solid #999; font-size: 11px; white-space: nowrap; border-radius: 3px; }
-    .btn-main { cursor: pointer; padding: 12px; width: 100%; margin-top: 10px; background: #333; color: #fff; border: none; font-weight: bold; border-radius: 4px; }
+    .btn-copy { cursor: pointer; padding: 6px 12px; background: #f8f8f8; border: 1px solid #bbb; font-size: 11px; white-space: nowrap; border-radius: 3px; font-weight: bold; }
+    .btn-copy:hover { background: #e0e0e0; }
+    
+    .btn-main { cursor: pointer; padding: 15px; width: 100%; margin-top: 10px; background: #222; color: #fff; border: none; font-weight: bold; border-radius: 4px; font-size: 15px; }
     .btn-main:disabled { background: #ccc; cursor: not-allowed; }
+    
     .hidden { display: none !important; }
-    @media (max-width: 700px) { .container { flex-direction: column; } }
+    @media (max-width: 1000px) { .container { flex-direction: column; } }
   </style>
 </head>
 <body>
@@ -31,36 +62,44 @@
 
 <div class="container">
   <div class="panel">
-    <div class="header-row"><strong>【入力エリア】</strong><button class="btn-small" onclick="location.reload()">リセット</button></div>
-    <span class="label">1. テンプレート選択</span>
+    <div class="header-row"><strong>【1. 入力エリア】</strong><button class="btn-small" onclick="location.reload()">リセット</button></div>
+    <span class="label">テンプレート選択</span>
     <select id="tplSelect" onchange="setupCalTitleSelect(); update();"><option value="">読込中...</option></select>
-    <span class="label">2. 申し込み情報</span>
-    <textarea id="rawInput" oninput="update()" placeholder="ここに貼り付け"></textarea>
-    <div class="flex-row" style="justify-content: flex-end;"><button class="btn-copy" onclick="copyText('rawInput')">申し込み情報をコピー</button></div>
-    <span class="label">3. お客様LINE名 (必須)</span>
+    
+    <span class="label">申し込み情報</span>
+    <textarea id="rawInput" oninput="update()" placeholder="メール内容等を貼り付け"></textarea>
+    <div class="flex-row" style="justify-content: flex-end;"><button class="btn-copy" onclick="copyText('rawInput')">内容をコピー</button></div>
+    
+    <span class="label">お客様LINE名 (必須)</span>
     <input type="text" id="lineNameInput" oninput="update()" placeholder="例：田中太郎">
-    <span class="label">4. セールス担当</span>
+    
+    <span class="label">セールス担当</span>
     <select id="staffSelect" onchange="update()"></select>
   </div>
 
   <div class="panel">
-    <strong>【出力結果】</strong>
+    <div class="header-row"><strong>【2. 出力結果】</strong></div>
+    
     <div id="calBox" class="hidden">
-      <span class="label">カレンダータイトル種別</span>
+      <span class="label">カレンダータイトル</span>
       <select id="calTitleSelect" onchange="update()"></select>
-      <span class="label">コピー用タイトル</span>
       <div class="flex-row"><input type="text" id="calOutput"><button class="btn-copy" onclick="copyText('calOutput')">コピー</button></div>
     </div>
 
     <div id="threadBox" class="hidden">
-      <span class="label">スレッド用テキスト（編集可）</span>
+      <span class="label">スレッド</span>
       <textarea id="threadOutput"></textarea>
       <div class="flex-row" style="justify-content: flex-end;"><button class="btn-copy" onclick="copyText('threadOutput')">スレッドをコピー</button></div>
     </div>
 
-    <span class="label">生成された本文（編集可）</span>
+    <span class="label">本文（編集可）</span>
     <textarea id="resultOutput"></textarea>
     <button id="mainCopyBtn" class="btn-main" onclick="copyText('resultOutput')" disabled>本文をコピーする</button>
+  </div>
+
+  <div class="panel guide-panel">
+    <div class="header-row"><strong>【3. 作業ガイド】</strong></div>
+    <div id="guideContent">テンプレートを選択すると、ここに作業上の注意点が表示されます。</div>
   </div>
 </div>
 
@@ -86,7 +125,7 @@
       const titles = templates[tIdx].calendar_title.split(',');
       if (titles.length > 1) {
         const placeholder = document.createElement("option");
-        placeholder.value = ""; placeholder.textContent = "-- タイトルを選択してください --";
+        placeholder.value = ""; placeholder.textContent = "-- タイトルを選択 --";
         calSelect.appendChild(placeholder);
       }
       titles.forEach(t => {
@@ -104,13 +143,20 @@
           selectedCalBase = document.getElementById("calTitleSelect").value;
     const tpl = templates[tIdx], staff = staffList[sIdx];
     
-    // 抽出ロジック
+    // ガイド表示の更新
+    const guideContent = document.getElementById("guideContent");
+    if (tpl) {
+      guideContent.textContent = tpl.memo || "（このテンプレートにガイドはありません）";
+    } else {
+      guideContent.textContent = "テンプレートを選択すると、ここに作業上の注意点が表示されます。";
+    }
+
+    // 抽出ロジック（お名前）
     const extractedUserName = (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim();
     
-    // 【修正箇所】eventNameの抽出と切り落とし
+    // eventNameの抽出（（ や _ 以降をカット）
     let extractedEventName = (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim();
     if (extractedEventName) {
-      // 「（」または「_」のいずれか早い方の位置で分割し、その前を採用
       extractedEventName = extractedEventName.split(/[（_]/)[0].trim();
     }
 
@@ -120,7 +166,7 @@
       document.getElementById("calOutput").value = selectedCalBase ? `${selectedCalBase}_${lineName}` : "";
     } else { document.getElementById("calBox").classList.add("hidden"); }
 
-    // スレッド
+    // スレッド制御（値がある場合のみ出力）
     const threadBox = document.getElementById("threadBox");
     if (tpl && tpl.thread && tpl.thread.trim() !== "") {
       threadBox.classList.remove("hidden");
@@ -137,7 +183,8 @@
         userName: extractedUserName,
         eventDate: (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim(),
         eventName: extractedEventName,
-        zoomLink: staff.zoom || "", memo: tpl.memo || ""
+        zoomLink: staff.zoom || "", 
+        memo: tpl.memo || ""
       };
       Object.keys(data).forEach(k => body = body.split(`\${${k}}`).join(data[k]));
       document.getElementById("resultOutput").value = body;
