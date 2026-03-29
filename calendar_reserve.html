@@ -107,7 +107,7 @@
     // カレンダータイトル制御
     if (tpl && tpl.calendar_title) {
       document.getElementById("calBox").classList.remove("hidden");
-      document.getElementById("calOutput").value = selectedCalBase ? `${selectedCalBase}_${lineName}` : "";
+      document.getElementById("calOutput").value = selectedCalBase ? `${selectedCalBase}${lineName}` : "";
     } else { document.getElementById("calBox").classList.add("hidden"); }
 
     // スレッド制御
