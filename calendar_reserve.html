@@ -30,19 +30,13 @@
 
 <div class="container">
   <div class="panel">
-    <div class="header-row">
-      <strong>【入力】</strong>
-      <button class="btn-small" onclick="clearAllData()">クリア</button>
-    </div>
+    <div class="header-row"><strong>【入力】</strong><button class="btn-small" onclick="clearAllData()">クリア</button></div>
     <span class="label">1. テンプレート</span>
     <select id="tplSelect"><option value="">読込中...</option></select>
-    
     <span class="label">2. 申し込み情報</span>
     <textarea id="rawInput" placeholder="貼り付けてください"></textarea>
-    
     <span class="label">3. お客様LINE名 (必須)</span>
     <input type="text" id="lineNameInput" placeholder="例：田中太郎">
-    
     <span class="label">4. セールス担当</span>
     <select id="staffSelect"></select>
   </div>
@@ -50,7 +44,9 @@
   <div class="panel">
     <strong>【出力】</strong>
     <div id="calBox" class="hidden">
-      <span class="label">カレンダータイトル</span>
+      <span class="label">カレンダータイトル種別</span>
+      <select id="calTitleSelect"></select>
+      <span class="label">コピー用タイトル</span>
       <div class="flex-row">
         <input type="text" id="calOutput" readonly>
         <button class="btn-copy" onclick="copyText('calOutput')">コピー</button>
@@ -65,73 +61,65 @@
 <script>
   const TPL_API = "https://script.google.com/macros/s/AKfycbwknNEj5910zohQL6xzbLnFPj5HqByNODhKvGAAE3yB4lpQ3aIjxVmVa0cmbkTTEk3V/exec";
   const STAFF_API = "https://script.google.com/macros/s/AKfycbySHVscjhTYWKf8bLJUGIMJ7AArbsp8cS8wl0O8FyYjYoO2mRzMO8jZhcc_cmhDvYfIhA/exec";
-  
   let templates = [], staffList = [];
 
   window.onload = async () => {
     try {
-      const [r1, r2] = await Promise.all([
-        fetch(TPL_API).then(r => r.json()),
-        fetch(STAFF_API).then(r => r.json())
-      ]);
-      templates = r1;
-      staffList = r2;
-
-      // プルダウン作成
-      const tSelect = document.getElementById("tplSelect");
-      tSelect.innerHTML = '<option value="">選択</option>' + templates.map((t, i) => `<option value="${i}">${t.template_name}</option>`).join('');
-      
-      const sSelect = document.getElementById("staffSelect");
-      sSelect.innerHTML = '<option value="">選択</option>' + staffList.map((s, i) => `<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
-
-      // 保存データの復元
+      const [r1, r2] = await Promise.all([fetch(TPL_API).then(r=>r.json()), fetch(STAFF_API).then(r=>r.json())]);
+      templates = r1; staffList = r2;
+      document.getElementById("tplSelect").innerHTML = '<option value="">選択</option>' + templates.map((t,i)=>`<option value="${i}">${t.template_name}</option>`).join('');
+      document.getElementById("staffSelect").innerHTML = '<option value="">選択</option>' + staffList.map((s,i)=>`<option value="${i}">${s.name}（${s.rank}）</option>`).join('');
       restoreData();
-      update(); // 復元後に一度計算を実行
-    } catch (e) {
-      console.error("データの読み込みに失敗しました");
-    }
+      update();
+    } catch (e) { console.error(e); }
   };
 
-  // 監視対象のIDリスト
-  const fields = ["tplSelect", "rawInput", "lineNameInput", "staffSelect"];
-
-  // 入力があるたびに保存と更新
+  const fields = ["tplSelect", "rawInput", "lineNameInput", "staffSelect", "calTitleSelect"];
   fields.forEach(id => {
     document.getElementById(id).addEventListener("input", () => {
       localStorage.setItem('cr_' + id, document.getElementById(id).value);
+      if(id === "tplSelect") setupCalTitleSelect();
       update();
     });
   });
+
+  function setupCalTitleSelect() {
+    const tIdx = document.getElementById("tplSelect").value;
+    const calSelect = document.getElementById("calTitleSelect");
+    calSelect.innerHTML = "";
+    if (tIdx !== "" && templates[tIdx].calendar_title) {
+      templates[tIdx].calendar_title.split(',').forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.trim(); opt.textContent = t.trim();
+        calSelect.appendChild(opt);
+      });
+      const saved = localStorage.getItem('cr_calTitleSelect');
+      if (saved) calSelect.value = saved;
+    }
+  }
 
   function restoreData() {
     fields.forEach(id => {
       const saved = localStorage.getItem('cr_' + id);
       if (saved !== null) document.getElementById(id).value = saved;
     });
+    setupCalTitleSelect();
   }
 
   function update() {
-    const tIdx = document.getElementById("tplSelect").value;
-    const sIdx = document.getElementById("staffSelect").value;
-    const lineName = document.getElementById("lineNameInput").value.trim();
-    const rawText = document.getElementById("rawInput").value.trim();
+    const tIdx = document.getElementById("tplSelect").value, sIdx = document.getElementById("staffSelect").value, 
+          lineName = document.getElementById("lineNameInput").value.trim(), rawText = document.getElementById("rawInput").value.trim(),
+          selectedCalBase = document.getElementById("calTitleSelect").value;
+    const tpl = templates[tIdx], staff = staffList[sIdx];
     
-    const tpl = templates[tIdx];
-    const staff = staffList[sIdx];
-    
-    // カレンダータイトルの表示切り替え
     const calBox = document.getElementById("calBox");
     if (tpl && tpl.calendar_title) {
       calBox.classList.remove("hidden");
-      document.getElementById("calOutput").value = `${tpl.calendar_title}_${lineName}`;
-    } else {
-      calBox.classList.add("hidden");
-    }
+      document.getElementById("calOutput").value = `${selectedCalBase}_${lineName}`;
+    } else { calBox.classList.add("hidden"); }
     
-    // 本文の生成判定
     const allOk = (tIdx !== "" && sIdx !== "" && lineName !== "" && rawText !== "");
     document.getElementById("mainCopyBtn").disabled = !allOk;
-    
     if (allOk) {
       let body = tpl.body;
       const data = {
@@ -140,27 +128,13 @@
         eventName: (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim(),
         zoomLink: staff.zoom || "" 
       };
-      Object.keys(data).forEach(k => {
-        body = body.split(`\${${k}}`).join(data[k]);
-      });
+      Object.keys(data).forEach(k => body = body.split(`\${${k}}`).join(data[k]));
       document.getElementById("resultOutput").value = body;
-    } else {
-      document.getElementById("resultOutput").value = "";
-    }
+    } else { document.getElementById("resultOutput").value = ""; }
   }
 
-  function copyText(id) {
-    const el = document.getElementById(id);
-    el.select();
-    document.execCommand("copy");
-  }
-
-  function clearAllData() {
-    if (confirm("入力をすべてクリアしますか？")) {
-      fields.forEach(id => localStorage.removeItem('cr_' + id));
-      location.reload();
-    }
-  }
+  function copyText(id) { const el = document.getElementById(id); el.select(); document.execCommand("copy"); }
+  function clearAllData() { if (confirm("クリアしますか？")) { fields.forEach(id => localStorage.removeItem('cr_' + id)); location.reload(); } }
 </script>
 </body>
 </html>
