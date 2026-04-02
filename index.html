@@ -1,15 +1,99 @@
 <!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>Main</title>
-</head>
+<html>
 <body>
-  <h1>ツール一覧</h1>
-  <ul>
-    <li><a href="calendar_reserve.html">カレンダー予約ツール</a></li>
-    <li><a href="template_replace.html">テンプレート置き換えツール</a></li>
-    <li><a href="schedule_maker.html">日程提示</a></li>
-  </ul>
+  <button id="clearBtn">全部クリア</button>
+  <hr>
+
+  <p>1. 申し込み情報</p>
+  <textarea id="info" rows="5" cols="60" placeholder="■お名前：... ■イベント名：... ■日程：..."></textarea>
+  <button id="copyInfo">情報をコピー</button>
+
+  <p>2. LINE名</p>
+  <textarea id="lineName" rows="1" cols="60"></textarea>
+  <button id="copyLine">LINE名をコピー</button>
+
+  <p>3. 選択（経路と担当）</p>
+  <div id="entryContainer"></div>
+  <div id="closerContainer"></div>
+  
+  <input type="hidden" id="zoomUrl">
+
+  <hr>
+
+  <p>出力(1)：管理ID</p>
+  <textarea id="resId" rows="2" cols="60" readonly></textarea>
+  <button id="copyId">IDをコピー</button>
+
+  <p>出力(2)：正式案内文</p>
+  <textarea id="resMsg" rows="15" cols="60" readonly></textarea>
+  <button id="copyMsg">案内文をコピー</button>
+
+  <script type="module">
+    import { initEntrySelect } from './entry-select.js';
+    import { initCloserSelect } from './closer-select.js';
+
+    window.onload = async () => {
+      initEntrySelect('entryContainer', run);
+      await initCloserSelect('closerContainer', 'zoomUrl', run);
+      run();
+    };
+
+    function run() {
+      const rawText = info.value;
+
+      // 抽出ロジック
+      const extractedUserName = (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim();
+      let extractedEventName = (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim();
+      if (extractedEventName) extractedEventName = extractedEventName.split(/[（_]/)[0].trim();
+      const eventDate = (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim();
+
+      // プルダウン情報
+      const entryVal = document.querySelector('#entryContainer select')?.value || "";
+      const clSelect = document.querySelector('#closerContainer select');
+      const zoom = document.getElementById('zoomUrl').value || "";
+
+      // 出力1
+      resId.value = entryVal + lineName.value;
+
+      // 出力2：ご指定のフォーマット
+      const uName = extractedUserName || "お客様";
+      const eName = extractedEventName || "イベント";
+      const eDate = eventDate || "（日程未入力）";
+      
+      resMsg.value = `【正式通知】
+改めまして${eName}にお申し込みいただきありがとうございました！
+
+下記日時とURLにて、実施できればと思いますので、どうぞよろしくお願いいたします☺️
+【開催日時】
+${uName}様
+${eDate}
+
+【参加URL】
+Zoomという会話アプリを使用します
+${zoom}
+
+【準備する物、お願い事項】
+・ご自宅など集中できる環境
+・聞きたいことの整理
+・個別開催につき、カメラオンでのご参加
+
+${uName}さんに向けたメッセージ動画を
+送ったので絶対に見てくださいね！👇`;
+    }
+
+    info.oninput = run;
+    lineName.oninput = run;
+
+    document.getElementById('clearBtn').onclick = () => {
+      info.value = ""; lineName.value = "";
+      run();
+    };
+
+    const copy = (el) => { el.select(); document.execCommand('copy'); };
+    document.getElementById('copyInfo').onclick = () => copy(info);
+    document.getElementById('copyLine').onclick = () => copy(lineName);
+    document.getElementById('copyId').onclick = () => copy(resId);
+    document.getElementById('copyMsg').onclick = () => copy(resMsg);
+  </script>
 </body>
 </html>
