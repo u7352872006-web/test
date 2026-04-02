@@ -1,32 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>カレンダー予約（広告）</title>
+<style>
+  .remind-simple{ animation: fadeblink-simple 1s infinite; }
+  @keyframes fadeblink-simple{ 0% {opacity:1;} 50% {opacity:0.2;} 100% {opacity:1;} }
+</style>
+</head>
 <body>
-  <button id="clearBtn">全部クリア</button>
-  <hr>
 
-  <p>1. 申し込み情報</p>
-  <textarea id="info" rows="5" cols="60" placeholder="■お名前：... ■イベント名：... ■日程：..."></textarea>
-  <button id="copyInfo">情報をコピー</button>
+<h3>カレンダー予約（広告）</h3>
+<button id="clearBtn">初期化</button>
+<br><br>
+
+  <p>1. カレンダー予約 申込情報</p>
+  <textarea id="info" rows="10" cols="50" placeholder="Slack通知にきた申込情報を貼付け" style="background-color:#e8f5e9;"></textarea>
+  <button id="copyInfo">コピー</button>
 
   <p>2. LINE名</p>
-  <textarea id="lineName" rows="1" cols="60"></textarea>
-  <button id="copyLine">LINE名をコピー</button>
+  <textarea id="lineName" rows="2" cols="25" placeholder="LINE名を入力" style="background-color:#fff9c4;"></textarea>
+  <button id="copyLine">コピー</button>
 
-  <p>3. 選択（経路と担当）</p>
+  <p>3. 流入経路</p>
   <div id="entryContainer"></div>
-  <div id="closerContainer"></div>
-  
-  <input type="hidden" id="zoomUrl">
-
+  <br>
   <hr>
 
-  <p>出力(1)：管理ID</p>
-  <textarea id="resId" rows="2" cols="60" readonly></textarea>
-  <button id="copyId">IDをコピー</button>
+  <section style="font-size:12px; line-height:1.6;">
+    <p style="font-weight:bold;">各種入力</p>
+    <ul>
+      <li>
+        <span style="color:blue; font-weight:bold; font-size:18px;">クローザー日程</span><br>
+        <span style="color:gray;">担当クローザー：</span><br>
+        <div id="closerContainer"></div>
+        <input type="hidden" id="zoomUrl">
+        <br><br>
+      </li>
+      <li>
+        <span style="color:blue; font-weight:bold; font-size:18px;">Googleカレンダー</span><br>
+        <span style="color:gray;">カレンダータイトル：</span><br>
+        <textarea id="resId" rows="3" cols="30" readonly></textarea>
+        <button id="copyId">コピー</button>
+        <br><br>
+        <span class="remind-simple" style="background:#e0f0ff; color:#004a99; font-weight:bold; padding:6px 12px; border-radius:4px;">
+          メール送信 忘れずに！
+        </span>
+        <br><br>
+      </li>
+      <li>
+        <span style="color:blue; font-weight:bold; font-size:18px;">個別相談ステータス(広告)</span><br>
+      </li>
+    </ul>
+    <br>
+    <hr>
 
-  <p>出力(2)：正式案内文</p>
-  <textarea id="resMsg" rows="15" cols="60" readonly></textarea>
-  <button id="copyMsg">案内文をコピー</button>
+    <p style="font-weight:bold;">UTAGE画面</p>
+    <ul>
+      <li>
+        <span style="color:#B22222; font-weight:bold; font-size:18px;">ラベルを貼る</span><br>
+        <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「（クローザー）担当者名」</span><br>
+        <br>
+      </li>
+      <li>
+        <span style="color:#B22222; font-weight:bold; font-size:18px;">メモ欄</span><br>
+        <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">カレンダー予約の申込情報を貼る</span><br>
+        <br>
+      </li>
+      <li>
+        <span style="color:#B22222; font-weight:bold; font-size:18px;">【正式通知】送付</span><br>
+        <textarea id="resMsg" rows="35" cols="30"></textarea>
+        <button id="copyMsg">コピー</button>
+        <br>
+      </li>
+      <li>
+        <span style="color:#B22222; font-weight:bold; font-size:18px;">動画送付</span><br>
+        <span style="color:gray;">@527 → わくわくオプチャセミナー：アポ確定動画</span><br>
+        <span style="color:gray;">@527以外 → 【アポ確定後】時給5000円実現会</span><br>
+        <br>
+      </li>
+      <li>
+        <span style="color:#B22222; font-weight:bold; font-size:18px;">雑談スタート(@527以外)</span><br>
+        <span style="color:gray;">呼び方はフルネームを避け、苗字または名前に寄せる</span><br>
+        <span style="color:gray;">例）山田太郎 →『山田さん』または『太郎さん』</span><br>
+        <textarea id="chatQuestion" rows="5" cols="30"></textarea>
+        <button id="chatCopyBtn">コピー</button>
+        <br><br>
+      </li>
+      <li>
+        <span style="color:#B22222; font-weight:bold; font-size:18px;">メインアカウントにラベルを貼る(@527以外)</span><br>
+        <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「サポート申込済」</span><br>
+      <br><br>
+      <br><br>
+      <br><br>
+    </li>
+  </ul>
+</section>
 
   <script type="module">
     import { initEntrySelect } from './entry-select.js';
@@ -40,6 +109,7 @@
 
     function run() {
       const rawText = info.value;
+      const lName = lineName.value.trim();
 
       // 抽出ロジック
       const extractedUserName = (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim();
@@ -52,21 +122,33 @@
       const clSelect = document.querySelector('#closerContainer select');
       const zoom = document.getElementById('zoomUrl').value || "";
 
-      // 出力1
-      resId.value = entryVal + lineName.value;
+      // 出力1：Googleカレンダー用
+      resId.value = entryVal + lName;
 
-      // 出力2：ご指定のフォーマット
-      const uName = extractedUserName || "お客様";
-      const eName = extractedEventName || "イベント";
-      const eDate = eventDate || "（日程未入力）";
-      
+      // 雑談質問（LINE名が入力されたら即時反映）
+      if (lName) {
+        chatQuestion.value = `${lName}さんはこれまで副業やったことありますか？`;
+        chatQuestion.style.color = "#000";
+      } else {
+        chatQuestion.value = "【入力待ち】LINE名を入力してください";
+        chatQuestion.style.color = "#999";
+      }
+
+      // 出力2：正式通知チェック
+      if (!extractedUserName || !extractedEventName || !eventDate || !entryVal || !lName || !zoom) {
+        resMsg.value = "【入力待ち】すべての項目を完了させてください";
+        resMsg.style.color = "#999";
+        return;
+      }
+
+      resMsg.style.color = "#000";
       resMsg.value = `【正式通知】
-改めまして${eName}にお申し込みいただきありがとうございました！
+改めまして${extractedEventName}にお申し込みいただきありがとうございました！
 
 下記日時とURLにて、実施できればと思いますので、どうぞよろしくお願いいたします☺️
 【開催日時】
-${uName}様
-${eDate}
+${extractedUserName}様
+${eventDate}
 
 【参加URL】
 Zoomという会話アプリを使用します
@@ -77,23 +159,41 @@ ${zoom}
 ・聞きたいことの整理
 ・個別開催につき、カメラオンでのご参加
 
-${uName}さんに向けたメッセージ動画を
+${extractedUserName}さんに向けたメッセージ動画を
 送ったので絶対に見てくださいね！👇`;
     }
 
     info.oninput = run;
     lineName.oninput = run;
 
+    // 初期化ボタン
     document.getElementById('clearBtn').onclick = () => {
-      info.value = ""; lineName.value = "";
+      info.value = "";
+      lineName.value = "";
+      document.getElementById('zoomUrl').value = "";
+
+      const eSelect = document.querySelector('#entryContainer select');
+      if (eSelect) eSelect.selectedIndex = 0;
+
+      const cSelect = document.querySelector('#closerContainer select');
+      if (cSelect) {
+        cSelect.selectedIndex = 0;
+        cSelect.style.backgroundColor = "#ffffff";
+      }
       run();
     };
 
-    const copy = (el) => { el.select(); document.execCommand('copy'); };
+    const copy = (el) => {
+      if (el.value.includes("【入力待ち】")) return;
+      el.select();
+      document.execCommand('copy');
+    };
+
     document.getElementById('copyInfo').onclick = () => copy(info);
     document.getElementById('copyLine').onclick = () => copy(lineName);
     document.getElementById('copyId').onclick = () => copy(resId);
     document.getElementById('copyMsg').onclick = () => copy(resMsg);
+    document.getElementById('chatCopyBtn').onclick = () => copy(chatQuestion);
   </script>
 </body>
 </html>
