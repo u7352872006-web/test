@@ -21,7 +21,7 @@
 <br><br>
 
   <p>1. カレンダー予約 申込情報</p>
-  <textarea id="info" rows="10" cols="50" placeholder="Slack通知にきた申込情報を貼付け" style="background-color:#e8f5e9;"></textarea>
+  <textarea id="info" rows="15" cols="45" placeholder="Slack通知にきた申込情報を貼付け" style="background-color:#e8f5e9;"></textarea>
   <button id="copyInfo">コピー</button>
 
   <p>2. LINE名</p>
@@ -142,7 +142,7 @@
 
       // 出力2：正式通知チェック
       if (!extractedUserName || !extractedEventName || !eventDate || !entryVal || !lName || !zoom) {
-        resMsg.value = "【入力待ち】すべての項目を完了させてください";
+        resMsg.value = "";
         resMsg.style.color = "#999";
         return;
       }
