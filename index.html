@@ -2,12 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>カレンダー予約（広告）</title>
+<title>カレンダー予約（SNS）</title>
 <style>
-  /* プルダウン（セレクトボックス）を太く、押しやすく調整 */
   select { 
-  padding: 4px 2px;   /* 上下を8px→4px、左右を4px→2pxに半分に */
-  font-size: 12px;    /* 文字を14px→12pxに */
+  padding: 4px 2px;
+  font-size: 12px;
   vertical-align: middle; 
   }
   .remind-simple{ animation: fadeblink-simple 1s infinite; }
@@ -16,7 +15,7 @@
 </head>
 <body>
 
-<h3>カレンダー予約（広告）</h3>
+<h3>カレンダー予約（SNS）</h3>
 <button id="clearBtn">初期化</button>
 <br><br>
 
@@ -27,11 +26,6 @@
   <p>2. LINE名</p>
   <textarea id="lineName" rows="2" cols="25" placeholder="LINE名を入力" style="background-color:#fff9c4;"></textarea>
   <button id="copyLine">コピー</button>
-
-  <p>3. 流入経路</p>
-  <div id="entryContainer"></div>
-  <br>
-  <hr>
 
   <section style="font-size:12px; line-height:1.6;">
     <p style="font-weight:bold;">各種入力</p>
@@ -44,18 +38,7 @@
         <br><br>
       </li>
       <li>
-        <span style="color:blue; font-weight:bold; font-size:18px;">Googleカレンダー</span><br>
-        <span style="color:gray;">カレンダータイトル：</span><br>
-        <textarea id="resId" rows="3" cols="30" readonly></textarea>
-        <button id="copyId">コピー</button>
-        <br><br>
-        <span class="remind-simple" style="background:#e0f0ff; color:#004a99; font-weight:bold; padding:6px 12px; border-radius:4px;">
-          メール送信 忘れずに！
-        </span>
-        <br><br>
-      </li>
-      <li>
-        <span style="color:blue; font-weight:bold; font-size:18px;">個別相談ステータス(広告)</span><br>
+        <span style="color:blue; font-weight:bold; font-size:18px;">個別相談ステータス(SNS)</span><br>
       </li>
     </ul>
     <br>
@@ -70,45 +53,37 @@
       </li>
       <li>
         <span style="color:#B22222; font-weight:bold; font-size:18px;">メモ欄</span><br>
-        <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">カレンダー予約の申込情報を貼る</span><br>
+        <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">申込情報を貼る</span><br>
         <br>
       </li>
       <li>
         <span style="color:#B22222; font-weight:bold; font-size:18px;">【正式通知】送付</span><br>
+        <span style="color:gray;">※動画を送らない企画の場合「この後～メッセージ動画をお送りするので」の部分を消す</span><br>
         <textarea id="resMsg" rows="35" cols="30"></textarea>
         <button id="copyMsg">コピー</button>
         <br>
       </li>
       <li>
         <span style="color:#B22222; font-weight:bold; font-size:18px;">動画送付</span><br>
-        <span style="color:gray;">@527 → わくわくオプチャセミナー：アポ確定動画</span><br>
-        <span style="color:gray;">@527以外 → 【アポ確定後】時給5000円実現会</span><br>
+        <span style="color:gray;">企画によって送る動画が違うので注意！</span><br>
+        <span style="color:gray;">※動画を送らない企画もある</span><br>
         <br>
       </li>
       <li>
-        <span style="color:#B22222; font-weight:bold; font-size:18px;">雑談スタート(@527以外)</span><br>
-        <span style="color:gray;">呼び方はフルネームを避け、苗字または名前に寄せる</span><br>
-        <span style="color:gray;">例）山田太郎 →『山田さん』または『太郎さん』</span><br>
+        <span style="color:#B22222; font-weight:bold; font-size:18px;">担当クローザに報告</span><br>
+        <span style="color:gray;">Slackチャンネル「snsセールス精鋭部隊」で</span><br>
+        <span style="color:gray;">担当クローザーをメンション</span><br>
+        <span style="color:gray;"></span>スレッド名：<br>
         <textarea id="chatQuestion" rows="5" cols="30"></textarea>
         <button id="chatCopyBtn">コピー</button>
-        <br><br>
       </li>
-      <li>
-        <span style="color:#B22222; font-weight:bold; font-size:18px;">メインアカウントにラベルを貼る(@527以外)</span><br>
-        <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「サポート申込済」</span><br>
-      <br><br>
-      <br><br>
-      <br><br>
-    </li>
   </ul>
 </section>
 
   <script type="module">
-    import { initEntrySelect } from './entry-select.js';
     import { initCloserSelect } from './closer-select.js';
 
     window.onload = async () => {
-      initEntrySelect('entryContainer', run);
       await initCloserSelect('closerContainer', 'zoomUrl', run);
       run();
     };
@@ -117,31 +92,22 @@
       const rawText = info.value;
       const lName = lineName.value.trim();
 
-      // 抽出ロジック
       const extractedUserName = (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim();
       let extractedEventName = (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim();
       if (extractedEventName) extractedEventName = extractedEventName.split(/[（_]/)[0].trim();
       const eventDate = (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim();
 
-      // プルダウン情報
-      const entryVal = document.querySelector('#entryContainer select')?.value || "";
-      const clSelect = document.querySelector('#closerContainer select');
       const zoom = document.getElementById('zoomUrl').value || "";
 
-      // 出力1：Googleカレンダー用
-      resId.value = entryVal + lName;
-
-      // 雑談質問（LINE名が入力されたら即時反映）
       if (lName) {
-        chatQuestion.value = `${lName}さんはこれまで副業やったことありますか？`;
+        chatQuestion.value = `【${lName}＿アポ振りスレッド】`;
         chatQuestion.style.color = "#000";
       } else {
         chatQuestion.value = "【入力待ち】LINE名を入力してください";
         chatQuestion.style.color = "#999";
       }
 
-      // 出力2：正式通知チェック
-      if (!extractedUserName || !extractedEventName || !eventDate || !entryVal || !lName || !zoom) {
+      if (!extractedUserName || !extractedEventName || !eventDate || !lName || !zoom) {
         resMsg.value = "";
         resMsg.style.color = "#999";
         return;
@@ -149,15 +115,19 @@
 
       resMsg.style.color = "#000";
       resMsg.value = `【正式通知】
-改めまして${extractedEventName}にお申し込みいただきありがとうございました！
+改めまして
+〈${extractedEventName}〉にお申し込みいただきありがとうございました。
+下記日時とURLにて
+実施できればと思いますので
+どうぞよろしくお願いいたします。
 
-下記日時とURLにて、実施できればと思いますので、どうぞよろしくお願いいたします☺️
 【開催日時】
 ${extractedUserName}様
 ${eventDate}
+※実際の所要時間は2時間程度です
 
 【参加URL】
-Zoomという会話アプリを使用します
+Zoomリンク
 ${zoom}
 
 【準備する物、お願い事項】
@@ -165,21 +135,21 @@ ${zoom}
 ・聞きたいことの整理
 ・個別開催につき、カメラオンでのご参加
 
-${extractedUserName}さんに向けたメッセージ動画を
-送ったので絶対に見てくださいね！👇`;
+この後
+${extractedUserName}さんに向けた
+メッセージ動画を
+お送りするので
+ご確認くださいませ。
+当日はよろしくお願いいたします。`;
     }
 
     info.oninput = run;
     lineName.oninput = run;
 
-    // 初期化ボタン
     document.getElementById('clearBtn').onclick = () => {
       info.value = "";
       lineName.value = "";
       document.getElementById('zoomUrl').value = "";
-
-      const eSelect = document.querySelector('#entryContainer select');
-      if (eSelect) eSelect.selectedIndex = 0;
 
       const cSelect = document.querySelector('#closerContainer select');
       if (cSelect) {
@@ -197,7 +167,6 @@ ${extractedUserName}さんに向けたメッセージ動画を
 
     document.getElementById('copyInfo').onclick = () => copy(info);
     document.getElementById('copyLine').onclick = () => copy(lineName);
-    document.getElementById('copyId').onclick = () => copy(resId);
     document.getElementById('copyMsg').onclick = () => copy(resMsg);
     document.getElementById('chatCopyBtn').onclick = () => copy(chatQuestion);
   </script>
