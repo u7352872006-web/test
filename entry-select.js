@@ -4,6 +4,7 @@ export function initEntrySelect(targetId, onChangeCallback) {
         { label: "（Meta1）@080", value: "動画編集＠080uolh_" },
         { label: "（Meta2）@851", value: "動画編集＠851nqhyd_" },
         { label: "（Meta3）@899", value: "動画編集＠899zwdaz_" },
+        { label: "（プレゼント企画経由）@527djnmg", value: "動画編集＠527djnmg_" },
         { label: "（YT）@521", value: "動画編集＠521obscj_" },
         { label: "（TikTok）@004", value: "動画編集＠004uieyi_" },
         { label: "AI動画編集 個別サポート @608", value: "AI動画編集＠608vwghp_" },
@@ -13,7 +14,7 @@ export function initEntrySelect(targetId, onChangeCallback) {
     ];
 
     container.innerHTML = `<select id="entry-select">
-        <option value="">経路を選択してください</option>
+        <option value="">流入経路を選択してください</option>
         ${mediaList.map(m => `<option value="${m.value}">${m.label}</option>`).join('')}
     </select>`;
 
