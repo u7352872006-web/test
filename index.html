@@ -21,12 +21,22 @@
 <hr>
 
   <p>1. カレンダー予約 申込情報</p>
-  <textarea id="info" rows="15" cols="45" placeholder="Slack通知にきた申込情報を貼付け" style="background-color:#e8f5e9;"></textarea>
-  <button id="copyInfo">コピー</button>
+  <textarea id="info" rows="15" cols="40" placeholder="Slack通知にきた申込情報を貼付け↓
 
-  <p>2. LINE名</p>
-  <textarea id="lineName" rows="2" cols="25" placeholder="LINE名を入力" style="background-color:#fff9c4;"></textarea>
-  <button id="copyLine">コピー</button>
+例
+
+■イベント名：時給5000円オートメーションプレミアムマスタークラス_3
+■日程：2026/XX/XX(〇) 00:00-00:00
+■担当：PC基礎サポート枠
+
+■お名前：〇〇〇〇
+■フリガナ： 
+■メールアドレス：××××@gmail.com
+■電話番号：
+
+■申込者一覧：
+https://utage-system.com/event/ZOLI3HlD8aMT/applicant" style="background-color:#e8f5e9;"></textarea>
+  <button id="copyInfo">コピー</button>
 
   <section style="font-size:12px; line-height:1.6;">
     <p style="font-weight:bold;">各種入力</p>
@@ -59,9 +69,10 @@
       </li>
       <li>
         <span style="color:#B22222; font-weight:bold; font-size:18px;">【正式通知】送付</span><br>
-        <span style="color:gray;">※動画を送らない企画の場合「この後 〇〇さんに向けた<br>メッセージ動画をお送りするので」の部分を消す</span><br>
+        <span style="color:gray;">※動画を送らない企画の場合<br>「この後 〇〇さんに向けた<br>メッセージ動画をお送りするので」の部分を消す</span><br>
         <textarea id="resMsg" rows="35" cols="30"></textarea>
         <button id="copyMsg">コピー</button>
+        <br>
         <br>
       </li>
       <li>
@@ -73,11 +84,9 @@
       <li>
         <span style="color:#B22222; font-weight:bold; font-size:18px;">担当クローザに報告</span><br>
         <span style="color:gray;">Slackチャンネル「snsセールス精鋭部隊」で</span><br>
-        <span style="color:gray;">担当クローザーをメンション</span><br>
-        <span style="color:gray;">画面スクショを共有</span><br>
-        <span style="color:gray;"></span>スレッド名：<br>
-        <textarea id="chatQuestion" rows="5" cols="30"></textarea>
-        <button id="chatCopyBtn">コピー</button>
+        <span style="color:gray;">・スレッドを立てる</span><br>
+        <span style="color:gray;">・担当クローザーをメンション</span><br>
+        <span style="color:gray;">・画面スクショを共有</span><br><br>
       </li>
   </ul>
 </section>
@@ -92,24 +101,13 @@
 
     function run() {
       const rawText = info.value;
-      const lName = lineName.value.trim();
 
       const extractedUserName = (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim();
-      let extractedEventName = (rawText.match(/■イベント名：\s*([^\n\r]+)/) || ["",""])[1].trim();
-      if (extractedEventName) extractedEventName = extractedEventName.split(/[（_]/)[0].trim();
       const eventDate = (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim();
 
       const zoom = document.getElementById('zoomUrl').value || "";
 
-      if (lName) {
-        chatQuestion.value = `【${lName}＿アポ振りスレッド】`;
-        chatQuestion.style.color = "#000";
-      } else {
-        chatQuestion.value = "【入力待ち】LINE名を入力してください";
-        chatQuestion.style.color = "#999";
-      }
-
-      if (!extractedUserName || !extractedEventName || !eventDate || !lName || !zoom) {
+      if (!extractedUserName || !eventDate || !zoom) {
         resMsg.value = "";
         resMsg.style.color = "#999";
         return;
@@ -117,10 +115,13 @@
 
       resMsg.style.color = "#000";
       resMsg.value = `【正式通知】
+
 改めまして
-〈${extractedEventName}〉にお申し込みいただきありがとうございました。
+お申し込みいただきありがとうございました。
+
 下記日時とURLにて
 実施できればと思いますので
+
 どうぞよろしくお願いいたします。
 
 【開催日時】
@@ -129,28 +130,21 @@ ${eventDate}
 ※実際の所要時間は2時間程度です
 
 【参加URL】
-Zoomリンク
 ${zoom}
+
 
 【準備する物、お願い事項】
 ・ご自宅など集中できる環境
 ・聞きたいことの整理
 ・個別開催につき、カメラオンでのご参加
 
-この後
-${extractedUserName}さんに向けた
-メッセージ動画を
-お送りするので
-ご確認くださいませ。
 当日はよろしくお願いいたします。`;
     }
 
     info.oninput = run;
-    lineName.oninput = run;
 
     document.getElementById('clearBtn').onclick = () => {
       info.value = "";
-      lineName.value = "";
       document.getElementById('zoomUrl').value = "";
 
       const cSelect = document.querySelector('#closerContainer select');
@@ -162,15 +156,12 @@ ${extractedUserName}さんに向けた
     };
 
     const copy = (el) => {
-      if (el.value.includes("【入力待ち】")) return;
       el.select();
       document.execCommand('copy');
     };
 
     document.getElementById('copyInfo').onclick = () => copy(info);
-    document.getElementById('copyLine').onclick = () => copy(lineName);
     document.getElementById('copyMsg').onclick = () => copy(resMsg);
-    document.getElementById('chatCopyBtn').onclick = () => copy(chatQuestion);
   </script>
 </body>
 </html>
