@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>DL</title>
+  <style>
+    /* 画面中央に配置、小さくシンプルなデザイン */
+    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; gap: 10px; }
+    
+    /* 小さいダウンロードボタン */
+    button { padding: 5px 15px; font-size: 12px; cursor: pointer; }
+    
+    /* シンプルな進捗表示 */
+    #progress { font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+
+  <button id="btn" onclick="startDownload()">ダウンロード</button>
+  <div id="progress"></div>
+
+  <script>
+    // データリスト
+    const list = [
+      { url: "https://utage-system.com/account/J4uKsPR2AHBi/line/friend/download/sjis?", name: "527.csv" },
+      { url: "https://utage-system.com/account/UtlGz3bt8AVX/line/friend/download/sjis?", name: "080.csv" },
+      { url: "https://utage-system.com/account/nWuNmIKirJfZ/line/friend/download/sjis?", name: "851.csv" },
+      { url: "https://utage-system.com/account/Jzzf3OPDeQgi/line/friend/download/sjis?", name: "899.csv" },
+      { url: "https://utage-system.com/account/00C9LtpoAKfV/line/friend/download/sjis?", name: "521.csv" },
+      { url: "https://utage-system.com/account/bu1GSmbCuwj0/line/friend/download/sjis?", name: "004.csv" },
+      { url: "https://utage-system.com/account/gmgyYHYXjjnr/line/friend/download/sjis?", name: "608.csv" },
+      { url: "https://utage-system.com/account/rhnyeYDsgCHi/line/friend/download/sjis?", name: "758.csv" },
+      { url: "https://utage-system.com/account/Ef2SXxxVM9O8/line/friend/download/sjis?", name: "108.csv" }
+    ];
+
+    async function startDownload() {
+      const btn = document.getElementById('btn');
+      const progress = document.getElementById('progress');
+      
+      btn.disabled = true; // 連打防止
+      btn.innerText = "処理中...";
+
+      for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        
+        // 進捗を％で表示 (例: 1/9 (11%))
+        const percent = Math.round(((i + 1) / list.length) * 100);
+        progress.innerText = `${i + 1}/${list.length} (${percent}%)`;
+
+        // ダウンロード処理
+        const a = document.createElement('a');
+        a.href = item.url;
+        a.download = item.name;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        // 待機 (ブラウザのブロック防止)
+        await new Promise(r => setTimeout(r, 1200));
+      }
+
+      progress.innerText = "完了";
+      btn.innerText = "ダウンロード";
+      btn.disabled = false;
+    }
+  </script>
+
+</body>
+</html>
