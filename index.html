@@ -1,167 +1,70 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>カレンダー予約（SNS）</title>
-<style>
-  select { 
-  padding: 4px 2px;
-  font-size: 12px;
-  vertical-align: middle; 
-  }
-  .remind-simple{ animation: fadeblink-simple 1s infinite; }
-  @keyframes fadeblink-simple{ 0% {opacity:1;} 50% {opacity:0.2;} 100% {opacity:1;} }
-</style>
+  <meta charset="UTF-8">
+  <title>DL</title>
+  <style>
+    /* 画面中央に配置、小さくシンプルなデザイン */
+    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; gap: 10px; }
+    
+    /* 小さいダウンロードボタン */
+    button { padding: 5px 15px; font-size: 12px; cursor: pointer; }
+    
+    /* シンプルな進捗表示 */
+    #progress { font-size: 12px; color: #666; }
+  </style>
 </head>
 <body>
 
-<h3>カレンダー予約（SNS）</h3>
-<button id="clearBtn">初期化</button>
-<br><br>
-<hr>
+  <button id="btn" onclick="startDownload()">ダウンロード</button>
+  <div id="progress"></div>
 
-  <p>1. カレンダー予約 申込情報</p>
-  <textarea id="info" rows="15" cols="40" placeholder="Slack通知にきた申込情報を貼付け↓
+  <script>
+    // データリスト
+    const list = [
+      { url: "https://utage-system.com/account/J4uKsPR2AHBi/line/friend/download/sjis?", name: "527.csv" },
+      { url: "https://utage-system.com/account/UtlGz3bt8AVX/line/friend/download/sjis?", name: "080.csv" },
+      { url: "https://utage-system.com/account/nWuNmIKirJfZ/line/friend/download/sjis?", name: "851.csv" },
+      { url: "https://utage-system.com/account/Jzzf3OPDeQgi/line/friend/download/sjis?", name: "899.csv" },
+      { url: "https://utage-system.com/account/00C9LtpoAKfV/line/friend/download/sjis?", name: "521.csv" },
+      { url: "https://utage-system.com/account/bu1GSmbCuwj0/line/friend/download/sjis?", name: "004.csv" },
+      { url: "https://utage-system.com/account/gmgyYHYXjjnr/line/friend/download/sjis?", name: "608.csv" },
+      { url: "https://utage-system.com/account/rhnyeYDsgCHi/line/friend/download/sjis?", name: "758.csv" },
+      { url: "https://utage-system.com/account/Ef2SXxxVM9O8/line/friend/download/sjis?", name: "108.csv" }
+    ];
 
-例
+    async function startDownload() {
+      const btn = document.getElementById('btn');
+      const progress = document.getElementById('progress');
+      
+      btn.disabled = true; // 連打防止
+      btn.innerText = "処理中...";
 
-■イベント名：時給5000円オートメーションプレミアムマスタークラス_3
-■日程：2026/XX/XX(〇) 00:00-00:00
-■担当：PC基礎サポート枠
+      for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        
+        // 進捗を％で表示 (例: 1/9 (11%))
+        const percent = Math.round(((i + 1) / list.length) * 100);
+        progress.innerText = `${i + 1}/${list.length} (${percent}%)`;
 
-■お名前：〇〇〇〇
-■フリガナ： 
-■メールアドレス：××××@gmail.com
-■電話番号：
+        // ダウンロード処理
+        const a = document.createElement('a');
+        a.href = item.url;
+        a.download = item.name;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
 
-■申込者一覧：
-https://utage-system.com/event/ZOLI3HlD8aMT/applicant" style="background-color:#e8f5e9;"></textarea>
-  <button id="copyInfo">コピー</button>
-
-  <section style="font-size:12px; line-height:1.6;">
-    <p style="font-weight:bold;">各種入力</p>
-    <ul>
-      <li>
-        <span style="color:blue; font-weight:bold; font-size:18px;">クローザー日程</span><br>
-        <span style="color:gray;">担当クローザー：</span><br>
-        <div id="closerContainer"></div>
-        <input type="hidden" id="zoomUrl">
-        <br><br>
-      </li>
-      <li>
-        <span style="color:blue; font-weight:bold; font-size:18px;">個別相談ステータス(SNS)</span><br>
-      </li>
-    </ul>
-    <br>
-    <hr>
-
-    <p style="font-weight:bold;">UTAGE画面</p>
-    <ul>
-      <li>
-        <span style="color:#B22222; font-weight:bold; font-size:18px;">ラベルを貼る</span><br>
-        <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">「（クローザー）担当者名」</span><br>
-        <br>
-      </li>
-      <li>
-        <span style="color:#B22222; font-weight:bold; font-size:18px;">メモ欄</span><br>
-        <span style="font-weight:bold; background-color:#fff9c4; padding:2px 4px;">申込情報を貼る</span><br>
-        <br>
-      </li>
-      <li>
-        <span style="color:#B22222; font-weight:bold; font-size:18px;">【正式通知】送付</span><br>
-        <span style="color:gray;">※動画を送らない企画の場合<br>「この後 〇〇さんに向けた<br>メッセージ動画をお送りするので」の部分を消す</span><br>
-        <textarea id="resMsg" rows="35" cols="30"></textarea>
-        <button id="copyMsg">コピー</button>
-        <br>
-        <br>
-      </li>
-      <li>
-        <span style="color:#B22222; font-weight:bold; font-size:18px;">動画送付</span><br>
-        <span style="color:gray;">企画によって送る動画が違うので注意！</span><br>
-        <span style="color:gray;">※動画を送らない企画もある</span><br>
-        <br>
-      </li>
-      <li>
-        <span style="color:#B22222; font-weight:bold; font-size:18px;">担当クローザに報告</span><br>
-        <span style="color:gray;">Slackチャンネル「snsセールス精鋭部隊」で</span><br>
-        <span style="color:gray;">・スレッドを立てる</span><br>
-        <span style="color:gray;">・担当クローザーをメンション</span><br>
-        <span style="color:gray;">・画面スクショを共有</span><br><br>
-      </li>
-  </ul>
-</section>
-
-  <script type="module">
-    import { initCloserSelect } from './closer-select.js';
-
-    window.onload = async () => {
-      await initCloserSelect('closerContainer', 'zoomUrl', run);
-      run();
-    };
-
-    function run() {
-      const rawText = info.value;
-
-      const extractedUserName = (rawText.match(/■お名前：\s*([^\n\r]+)/) || ["",""])[1].trim();
-      const eventDate = (rawText.match(/■日程：\s*([^\n\r]+)/) || ["",""])[1].trim();
-
-      const zoom = document.getElementById('zoomUrl').value || "";
-
-      if (!extractedUserName || !eventDate || !zoom) {
-        resMsg.value = "";
-        resMsg.style.color = "#999";
-        return;
+        // 待機 (ブラウザのブロック防止)
+        await new Promise(r => setTimeout(r, 1200));
       }
 
-      resMsg.style.color = "#000";
-      resMsg.value = `【正式通知】
-
-改めまして
-お申し込みいただきありがとうございました。
-
-下記日時とURLにて
-実施できればと思いますので
-
-どうぞよろしくお願いいたします。
-
-【開催日時】
-${extractedUserName}様
-${eventDate}
-※実際の所要時間は2時間程度です
-
-【参加URL】
-${zoom}
-
-
-【準備する物、お願い事項】
-・ご自宅など集中できる環境
-・聞きたいことの整理
-・個別開催につき、カメラオンでのご参加
-
-当日はよろしくお願いいたします。`;
+      progress.innerText = "完了";
+      btn.innerText = "ダウンロード";
+      btn.disabled = false;
     }
-
-    info.oninput = run;
-
-    document.getElementById('clearBtn').onclick = () => {
-      info.value = "";
-      document.getElementById('zoomUrl').value = "";
-
-      const cSelect = document.querySelector('#closerContainer select');
-      if (cSelect) {
-        cSelect.selectedIndex = 0;
-        cSelect.style.backgroundColor = "#ffffff";
-      }
-      run();
-    };
-
-    const copy = (el) => {
-      el.select();
-      document.execCommand('copy');
-    };
-
-    document.getElementById('copyInfo').onclick = () => copy(info);
-    document.getElementById('copyMsg').onclick = () => copy(resMsg);
   </script>
+
 </body>
 </html>
